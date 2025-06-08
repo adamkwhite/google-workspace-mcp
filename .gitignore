@@ -1,3 +1,5 @@
 calendar-mcp-venv/
 __pycache__/
 *.pyc
+credentials.json
+token.json
