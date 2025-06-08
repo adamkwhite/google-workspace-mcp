@@ -40,8 +40,10 @@ logger = logging.getLogger(__name__)
 class GoogleCalendarMCP:
     def __init__(self):
         self.service = None
-        self.credentials_path = Path("credentials.json")
-        self.token_path = Path("token.json")
+        # Get directory where server.py is located
+        script_dir = Path(__file__).parent.parent  # Go up one level from src/
+        self.credentials_path = script_dir / "credentials.json"
+        self.token_path = script_dir / "token.json"
         self.setup_auth()
     
     def setup_auth(self):
