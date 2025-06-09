@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 credentials.json
 token.json
+credentials.json
+token.json
+calendar-mcp-venv/
+__pycache__/
+*.pyc
+*.log
