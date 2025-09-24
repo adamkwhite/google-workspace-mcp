@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "google-workspace": {
+      "command": "wsl",
+      "args": [
+        "bash", 
+        "-c", 
+        "cd /home/adam/Code/google-workspace-mcp && source venv/bin/activate && python src/server.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "enabled_services": {
+    "calendar": true,
+    "gmail": false,
+    "docs": true,
+    "drive": true
+  },
+  "scope_dependencies": {
+    "docs": [
+      "drive"
+    ],
+    "sheets": [
+      "drive"
+    ],
+    "slides": [
+      "drive"
+    ]
+  },
+  "scope_mappings": {
+    "calendar": "https://www.googleapis.com/auth/calendar",
+    "gmail": "https://www.googleapis.com/auth/gmail.modify",
+    "docs": "https://www.googleapis.com/auth/documents",
+    "sheets": "https://www.googleapis.com/auth/spreadsheets",
+    "slides": "https://www.googleapis.com/auth/presentations",
+    "drive": "https://www.googleapis.com/auth/drive.file"
+  },
+  "service_descriptions": {
+    "calendar": "Create, view, and manage calendar events",
+    "gmail": "Send, read, and manage email messages",
+    "docs": "Create and edit Google Documents",
+    "sheets": "Create and edit Google Spreadsheets",
+    "slides": "Create and edit Google Presentations",
+    "drive": "Access Google Drive files (required for Docs/Sheets/Slides)"
+  }
+}

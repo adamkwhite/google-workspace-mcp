@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "google-workspace": {
+      "command": "/home/adam/Code/google-workspace-mcp/venv/bin/python",
+      "args": [
+        "/home/adam/Code/google-workspace-mcp/src/server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/adam/Code/google-workspace-mcp/src"
+      }
+    }
+  }
+}

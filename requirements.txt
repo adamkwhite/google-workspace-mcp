@@ -1,0 +1,27 @@
+# Google Workspace MCP Server Requirements
+
+# MCP Framework
+mcp>=0.1.0
+
+# Google API Client Libraries
+google-api-python-client>=2.88.0
+google-auth>=2.16.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+
+# Email handling
+email-validator>=2.0.0
+
+# Utility Libraries
+python-dotenv>=1.0.0
+aiofiles>=23.1.0
+
+# Testing
+pytest>=7.3.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
+
+# Development
+black>=23.3.0
+flake8>=6.0.0
+mypy>=1.3.0
