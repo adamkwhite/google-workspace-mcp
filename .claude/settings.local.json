@@ -86,7 +86,9 @@
       "Bash(ss:*)",
       "mcp__filesystem__get_file_info",
       "mcp__filesystem__edit_file",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(kill:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }
