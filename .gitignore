@@ -12,11 +12,18 @@ ENV/
 dist/
 build/
 
-# Google API
+# Google API - OAuth credentials and tokens
 config/credentials.json
-config/token.pickle
+config/token.pickle*
 config/token.json
 *.pickle
+
+# Slack cache files (contain sensitive workspace data)
+.channels_cache.json
+.users_cache.json
+
+# Claude settings (may contain personal config)
+.claude/settings.local.json
 
 # Environment
 .env
