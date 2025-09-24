@@ -88,7 +88,8 @@
       "mcp__filesystem__edit_file",
       "Bash(git remote set-url:*)",
       "Bash(kill:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .channels_cache.json .users_cache.json config/token.pickle.backup config/token.pickle.backup2' --prune-empty --tag-name-filter cat -- --all)"
     ],
     "deny": []
   }
