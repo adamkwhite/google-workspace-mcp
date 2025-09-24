@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "google-calendar": {
+      "command": "wsl",
+      "args": [
+        "--cd",
+        "/home/adam/Code/calendar-mcp",
+        "python3.11",
+        "src/server.py"
+      ]
+    }
+  }
+}
