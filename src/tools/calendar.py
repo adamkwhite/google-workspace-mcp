@@ -5,6 +5,10 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.date_helpers import add_computed_fields
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +80,9 @@ class GoogleCalendarTools:
             ).execute()
             
             logger.info(f"Successfully created event: {event.get('summary')} (ID: {event.get('id')})")
-            
-            return {
+
+            # Build response with basic fields
+            response = {
                 'id': event.get('id'),
                 'summary': event.get('summary'),
                 'htmlLink': event.get('htmlLink'),
@@ -86,6 +91,15 @@ class GoogleCalendarTools:
                 'status': event.get('status'),
                 'created': event.get('created')
             }
+
+            # Add computed fields for day-of-week and date information
+            try:
+                response = add_computed_fields(response)
+            except Exception as e:
+                logger.warning(f"Failed to add computed fields to created event: {e}")
+                # Return response without computed fields if calculation fails
+
+            return response
             
         except HttpError as e:
             logger.error(f"Error creating event: {e}")
@@ -149,8 +163,9 @@ class GoogleCalendarTools:
             ).execute()
             
             logger.info(f"Successfully updated event: {updated_event.get('summary')} (ID: {event_id})")
-            
-            return {
+
+            # Build response with basic fields
+            response = {
                 'id': updated_event.get('id'),
                 'summary': updated_event.get('summary'),
                 'htmlLink': updated_event.get('htmlLink'),
@@ -159,6 +174,15 @@ class GoogleCalendarTools:
                 'status': updated_event.get('status'),
                 'updated': updated_event.get('updated')
             }
+
+            # Add computed fields for day-of-week and date information
+            try:
+                response = add_computed_fields(response)
+            except Exception as e:
+                logger.warning(f"Failed to add computed fields to updated event: {e}")
+                # Return response without computed fields if calculation fails
+
+            return response
             
         except HttpError as e:
             logger.error(f"Error updating event: {e}")
@@ -276,7 +300,7 @@ class GoogleCalendarTools:
             events_result = service.events().list(**request_params).execute()
             events = events_result.get('items', [])
             
-            # Format events for response
+            # Format events for response with computed fields
             formatted_events = []
             for event in events:
                 formatted_event = {
@@ -290,6 +314,14 @@ class GoogleCalendarTools:
                     'status': event.get('status'),
                     'attendees': event.get('attendees', [])
                 }
+
+                # Add computed fields for day-of-week and date information
+                try:
+                    formatted_event = add_computed_fields(formatted_event)
+                except Exception as e:
+                    logger.warning(f"Failed to add computed fields to event {event.get('id', 'unknown')}: {e}")
+                    # Continue without computed fields if calculation fails
+
                 formatted_events.append(formatted_event)
                 
             logger.info(f"Found {len(formatted_events)} events")
