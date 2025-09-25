@@ -1,0 +1,21 @@
+version: 2
+  updates:
+    - package-ecosystem: "npm"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+        day: "monday"
+        time: "09:00"
+      open-pull-requests-limit: 5
+      reviewers:
+        - "team-name"
+      assignees:
+        - "maintainer-username"
+      commit-message:
+        prefix: "deps"
+        include: "scope"
+      groups:
+        dev-dependencies:
+          patterns:
+            - "*"
+          dependency-type: "development"
