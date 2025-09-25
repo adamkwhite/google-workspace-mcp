@@ -77,10 +77,35 @@ Your Google Calendar
 • **Calendar Client**: Wraps Google Calendar API operations
 • **Tool Interface**: Exposes calendar operations to Claude
 
+## 🎯 Enhanced Calendar API Responses
+
+### Day-of-Week Computed Fields
+
+All calendar tools now return enhanced responses with computed date information to eliminate day-of-week calculation errors. Every calendar event includes a `computed` field with:
+
+```json
+{
+  "computed": {
+    "startDay": "Saturday",      // Day of the week for start date
+    "endDay": "Saturday",        // Day of the week for end date
+    "startDate": "2025-09-27",   // ISO date format (YYYY-MM-DD)
+    "endDate": "2025-09-27",     // ISO date format (YYYY-MM-DD)
+    "duration": "1 hour",        // Human-readable duration
+    "spansMultipleDays": false   // Whether event spans multiple calendar days
+  }
+}
+```
+
+**Key Benefits:**
+- ✅ **Timezone-aware calculations** using Python's `zoneinfo`
+- ✅ **DST transition handling** for accurate time calculations
+- ✅ **Backward compatibility** - all original fields preserved
+- ✅ **Error resilience** - graceful fallback if computation fails
+
 ## Available Tools
 
 ### create_calendar_event
-Creates new calendar events with full feature support.
+Creates new calendar events with full feature support and enhanced computed fields.
 
 **Required Parameters:**
 • `calendar_id`: Target calendar (use "primary" for main calendar)
@@ -93,6 +118,21 @@ Creates new calendar events with full feature support.
 • `location`: Physical or virtual location
 • `attendees`: Array of email addresses
 • `timezone`: Timezone (defaults to EST)
+
+**Enhanced Response:**
+```json
+{
+  "id": "new-event-id",
+  "summary": "Team Meeting",
+  "start": {"dateTime": "2025-09-27T14:00:00-04:00", "timeZone": "America/Toronto"},
+  "end": {"dateTime": "2025-09-27T15:00:00-04:00", "timeZone": "America/Toronto"},
+  "computed": {
+    "startDay": "Saturday",
+    "duration": "1 hour",
+    "spansMultipleDays": false
+  }
+}
+```
 
 ### update_calendar_event
 Modifies existing calendar events.
@@ -109,6 +149,41 @@ Removes calendar events.
 **Required Parameters:**
 • `calendar_id`: Target calendar
 • `event_id`: ID of event to delete
+
+### list_calendar_events
+Lists calendar events with enhanced day-of-week information.
+
+**Parameters:**
+• `calendar_id`: Target calendar (defaults to "primary")
+• `time_min`: Start time filter (ISO format)
+• `time_max`: End time filter (ISO format)
+• `max_results`: Maximum events to return
+• `q`: Search query
+
+**Enhanced Response Example:**
+```json
+{
+  "events": [
+    {
+      "id": "event-id",
+      "summary": "Weekly Standup",
+      "start": {"dateTime": "2025-09-29T09:00:00-04:00", "timeZone": "America/Toronto"},
+      "end": {"dateTime": "2025-09-29T09:30:00-04:00", "timeZone": "America/Toronto"},
+      "location": "Conference Room B",
+      "description": "Weekly team sync",
+      "computed": {
+        "startDay": "Monday",
+        "endDay": "Monday",
+        "startDate": "2025-09-29",
+        "endDate": "2025-09-29",
+        "duration": "30 minutes",
+        "spansMultipleDays": false
+      }
+    }
+  ],
+  "count": 1
+}
+```
 
 ### list_calendars
 Returns all accessible calendars with IDs and permissions.
@@ -177,6 +252,12 @@ Claude, cancel my meeting with the client scheduled for Friday.
 - Confirm calendar_id is correct (use list_calendars tool)
 - Verify event_id exists for update/delete operations
 - Check datetime format (ISO 8601 required)
+
+### Day-of-Week Accuracy Issues
+- **Issue resolved**: Calendar responses now include computed `startDay`/`endDay` fields
+- If missing computed fields: Verify you're using the enhanced MCP server version
+- For legacy responses: Update to latest server version with day-of-week enhancements
+- Timezone issues: Check that event timezone matches expected region (EST/PST/UTC)
 
 ## Testing
 
