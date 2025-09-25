@@ -52,3 +52,16 @@ logs/
 # Temporary
 tmp/
 temp/
+*.tmp
+*.bak
+*~
+
+# Test reports (keep in reports/ directory)
+test_results.html
+test_results.txt
+test_results.xml
+
+# Development files
+fix_*.py
+debug_*.py
+scratch_*.py
