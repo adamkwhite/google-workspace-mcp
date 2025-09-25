@@ -2,8 +2,13 @@
 
 import pytest
 import asyncio
+import sys
+import os
 from unittest.mock import Mock, patch, MagicMock
-from src.tools.calendar import GoogleCalendarTools
+# Add the src directory to the path so we can import from src.tools
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from tools.calendar import GoogleCalendarTools
 
 
 class TestEnhancedCalendar:

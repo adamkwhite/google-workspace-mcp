@@ -5,9 +5,6 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.date_helpers import add_computed_fields
 
 logger = logging.getLogger(__name__)

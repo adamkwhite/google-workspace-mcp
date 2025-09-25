@@ -5,7 +5,12 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
-from date_helpers import (
+import sys
+import os
+# Add the src directory to the path so we can import from src.utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from utils.date_helpers import (
     parse_calendar_datetime,
     get_day_of_week,
     get_date_string,

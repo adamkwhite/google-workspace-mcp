@@ -92,7 +92,9 @@
       "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch .channels_cache.json .users_cache.json config/token.pickle.backup config/token.pickle.backup2' --prune-empty --tag-name-filter cat -- --all)",
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh pr diff:*)"
     ],
     "deny": []
   }
