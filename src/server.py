@@ -305,7 +305,7 @@ async def handle_list_tools() -> list[types.Tool]:
                         "replace_all": {
                             "type": "boolean",
                             "description": "Whether to replace all content (default: False)",
-                            "default": false
+                            "default": False
                         }
                     },
                     "required": ["document_id", "content"]

@@ -14,9 +14,10 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 
 ### 📅 **Google Calendar**
 - Create, update, and delete events
-- List calendars and events
+- List calendars and events with **computed day-of-week information**
 - Manage attendees and send invitations
 - Search events by date or keywords
+- **🎯 NEW**: Enhanced responses include accurate day-of-week, duration, and date calculations
 
 ### ✉️ **Gmail**
 - Send emails with HTML support
@@ -89,6 +90,33 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
    ```
 
 6. **First run** will open browser for authentication (only for enabled services)
+
+## 🎯 Enhanced Calendar Features
+
+### Day-of-Week Accuracy
+Calendar events now include computed fields that eliminate day-of-week calculation errors:
+
+```json
+{
+  "summary": "Team Meeting",
+  "start": {"dateTime": "2025-09-27T14:00:00-04:00", "timeZone": "America/Toronto"},
+  "end": {"dateTime": "2025-09-27T15:00:00-04:00", "timeZone": "America/Toronto"},
+  "computed": {
+    "startDay": "Saturday",
+    "endDay": "Saturday",
+    "startDate": "2025-09-27",
+    "endDate": "2025-09-27",
+    "duration": "1 hour",
+    "spansMultipleDays": false
+  }
+}
+```
+
+**Benefits:**
+- ✅ **Accurate day-of-week** - No more "Friday the 27th" when it's actually Saturday
+- ⏰ **Human-readable duration** - "2 hours 30 minutes" instead of manual calculation
+- 📅 **Date consistency** - Reliable YYYY-MM-DD format
+- 🌐 **Timezone-aware** - Proper handling of EST, PST, UTC, and DST transitions
 
 ## Usage Examples
 
@@ -164,9 +192,9 @@ In Claude, use: `get_mcp_configuration` to see:
 - `get_mcp_configuration` - Show current service configuration
 
 ### Calendar Tools (if enabled)
-- `create_calendar_event` - Create new events with full details
+- `create_calendar_event` - Create new events with full details and computed fields
 - `list_calendars` - Show all available calendars
-- `list_calendar_events` - Search and list events
+- `list_calendar_events` - Search and list events with enhanced day-of-week information
 
 ### Gmail Tools (if enabled)
 - `send_email` - Send emails with HTML support
@@ -188,7 +216,8 @@ google-workspace-mcp/
 ├── src/                    # Application source code
 │   ├── server.py          # Main MCP server (conditional tool registration)
 │   ├── utils/
-│   │   └── scope_manager.py # Service configuration management
+│   │   ├── scope_manager.py # Service configuration management
+│   │   └── date_helpers.py  # Enhanced timezone-aware date calculations
 │   ├── auth/
 │   │   └── google_auth.py # Dynamic authentication
 │   └── tools/             # Service-specific implementations
@@ -268,7 +297,8 @@ black src/
 ## Roadmap
 
 - [x] Calendar integration
-- [x] Gmail integration  
+- [x] **Day-of-week enhancement with computed fields**
+- [x] Gmail integration
 - [x] Google Docs creation
 - [ ] Google Sheets with data import
 - [ ] Google Slides with templates
