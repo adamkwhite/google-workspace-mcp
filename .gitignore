@@ -40,6 +40,10 @@ config/token.json
 .coverage
 htmlcov/
 .tox/
+coverage.xml
+
+# SonarQube
+.scannerwork/
 
 # OS
 .DS_Store
