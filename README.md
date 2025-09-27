@@ -2,6 +2,15 @@
 
 A configurable Model Context Protocol (MCP) server that enables Claude to manage your Google Workspace services. **Choose which services to enable** - Calendar, Gmail, Docs, or any combination. Works with regular Gmail accounts - no Google Workspace subscription required!
 
+## Code Quality
+
+[![Quality Gate Status](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=alert_status)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Bugs](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=bugs)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Code Coverage](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=coverage)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Reliability Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=reliability_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Security Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=security_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Maintainability Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=sqale_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+
 ## 🔧 User-Configurable Services
 
 **You control which Google services are enabled:**
