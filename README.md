@@ -22,7 +22,7 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 ## Features
 
 ### 📅 **Google Calendar**
-- Create, update, and delete events
+- Create events with enhanced day-of-week calculations
 - List calendars and events with **computed day-of-week information**
 - Manage attendees and send invitations
 - Search events by date or keywords
@@ -39,12 +39,12 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 - Organize in Drive folders
 - Share with collaborators
 
-### 📊 **Google Sheets** (Coming Soon)
+### 📊 **Google Sheets** (Not Implemented)
 - Create spreadsheets with data
 - Add headers and formatting
 - Import data arrays
 
-### 📽️ **Google Slides** (Coming Soon)
+### 📽️ **Google Slides** (Not Implemented)
 - Create presentations
 - Add slides with different layouts
 - Insert content
@@ -132,9 +132,9 @@ Calendar events now include computed fields that eliminate day-of-week calculati
 ### Calendar Management
 ```
 "Schedule a team meeting tomorrow at 2 PM for 1 hour with john@example.com and jane@example.com"
-"Move my 3 PM meeting today to 4 PM"
-"Show me all meetings this week"
-"Find a free slot for a 30-minute call with the marketing team"
+"Show me all meetings this week with day-of-week information"
+"List my calendar events for next Monday"
+"Search for events with 'project review' in the title"
 ```
 
 ### Email Operations
@@ -201,9 +201,9 @@ In Claude, use: `get_mcp_configuration` to see:
 - `get_mcp_configuration` - Show current service configuration
 
 ### Calendar Tools (if enabled)
-- `create_calendar_event` - Create new events with full details and computed fields
+- `create_calendar_event` - Create new events with computed day-of-week fields
 - `list_calendars` - Show all available calendars
-- `list_calendar_events` - Search and list events with enhanced day-of-week information
+- `list_calendar_events` - Search and list events with enhanced date information
 
 ### Gmail Tools (if enabled)
 - `send_email` - Send emails with HTML support
@@ -230,15 +230,11 @@ google-workspace-mcp/
 │   ├── auth/
 │   │   └── google_auth.py # Dynamic authentication
 │   └── tools/             # Service-specific implementations
-├── scripts/
-│   └── configure_scopes.py # Interactive configuration tool
-│   ├── auth/              # Shared authentication
-│   └── tools/             # Tool implementations
 │       ├── calendar.py    # Calendar operations
 │       ├── gmail.py       # Email operations
-│       ├── docs.py        # Document creation
-│       ├── sheets.py      # Spreadsheet creation
-│       └── slides.py      # Presentation creation
+│       └── docs.py        # Document creation
+├── scripts/
+│   └── configure_scopes.py # Interactive configuration tool
 ├── tests/                 # Unit tests
 ├── docs/                  # Documentation
 ├── scripts/               # Setup and deployment
@@ -248,16 +244,14 @@ google-workspace-mcp/
 ## Security
 
 - OAuth2 authentication with secure token storage
-- **Calendar-only permissions** - this MCP only requests Google Calendar access
+- **User-configurable service permissions** - Enable only Calendar, Gmail, Docs, or any combination
+- Minimal scope requests based on enabled services:
+  - Calendar: `https://www.googleapis.com/auth/calendar` (if enabled)
+  - Gmail: `https://www.googleapis.com/auth/gmail.send`, `https://www.googleapis.com/auth/gmail.readonly` (if enabled)
+  - Docs: `https://www.googleapis.com/auth/documents`, `https://www.googleapis.com/auth/drive.file` (if enabled)
 - Tokens stored locally, never transmitted
 - Automatic token refresh
 - All credentials in `.gitignore`
-
-### Permission Scope
-This MCP uses minimal Google API permissions:
-- `https://www.googleapis.com/auth/calendar` - Full calendar access for add/edit/delete operations
-
-**Note**: Previous versions requested broader permissions (Gmail, Docs, etc.) but this has been restricted to calendar-only for security. If you need other Google services, use separate dedicated MCPs.
 
 ## API Quotas (Free Tier)
 
@@ -305,10 +299,11 @@ black src/
 
 ## Roadmap
 
-- [x] Calendar integration
-- [x] **Day-of-week enhancement with computed fields**
-- [x] Gmail integration
-- [x] Google Docs creation
+- [x] Calendar integration with computed date fields
+- [x] Gmail integration (send, search, drafts)
+- [x] Google Docs creation and updates
+- [x] User-configurable service scoping
+- [ ] Calendar event updates and deletion
 - [ ] Google Sheets with data import
 - [ ] Google Slides with templates
 - [ ] Batch operations
