@@ -125,3 +125,20 @@ ls -la config/credentials.json
 - Scope changes require token deletion and re-authentication
 - Error handling provides clear messages about disabled services
 - Test configuration with `get_mcp_configuration` tool
+
+## Documentation Accuracy & Maintenance
+
+**Critical**: Keep README claims aligned with actual implementation
+- **Regular audits**: Check that README features match server.py tool registrations
+- **Implementation vs Documentation**: If code has methods but they're not exposed as MCP tools, don't claim the functionality in README
+- **User expectations**: Misleading documentation creates poor user experience when features don't work as advertised
+- **Example**: Calendar had `update_event()`/`delete_event()` methods but no MCP tools registered → README claimed "update, and delete events" → Users couldn't actually do this
+
+## GitHub Actions & Workflow Debugging
+
+**Common Issues and Solutions**:
+- **Workflow validation errors**: Claude Code Action requires identical workflow files between main and PR branches for security
+- **Invalid CLI flags**: Remove unsupported flags like `--allowed-bots` that cause immediate failures
+- **YAML syntax**: GitHub validation can be "lazy" - config errors may not surface until PR triggers validation
+- **Workflow interdependencies**: Failed workflows can prevent other validations from running
+- **Debugging approach**: Fix one workflow at a time, rebase/force-push to trigger fresh validation
