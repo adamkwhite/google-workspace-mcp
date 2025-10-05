@@ -141,6 +141,28 @@ async def handle_list_tools() -> list[types.Tool]:
                                 "description": "Timezone (e.g., 'America/Toronto')",
                                 "default": "America/Toronto",
                             },
+                            "metadata": {
+                                "type": "object",
+                                "description": "Optional metadata for traceability (optional)",
+                                "properties": {
+                                    "chat_title": {
+                                        "type": "string",
+                                        "description": "Title of the chat/conversation",
+                                    },
+                                    "chat_url": {
+                                        "type": "string",
+                                        "description": "URL to the chat/conversation",
+                                    },
+                                    "project_name": {
+                                        "type": "string",
+                                        "description": "Project name (if applicable)",
+                                    },
+                                    "created_date": {
+                                        "type": "string",
+                                        "description": "Date when event was created",
+                                    },
+                                },
+                            },
                         },
                         "required": ["summary", "start_time", "end_time"],
                     },

@@ -44,6 +44,7 @@ class GoogleCalendarTools:
                 - location: Event location (optional)
                 - attendees: List of attendee emails (optional)
                 - timezone: Timezone (defaults to America/Toronto)
+                - metadata: Dict with chat_title, chat_url, project_name, created_date (optional)
 
         Returns:
             Dictionary with event information including ID and link
@@ -65,8 +66,26 @@ class GoogleCalendarTools:
             }
 
             # Add optional fields
-            if "description" in params:
-                event_data["description"] = params["description"]
+            description = params.get("description", "")
+
+            # Append metadata to description if provided
+            if "metadata" in params and params["metadata"]:
+                metadata = params["metadata"]
+                metadata_section = "\n\n---\n📋 Context:\n"
+
+                if metadata.get("created_date"):
+                    metadata_section += f"Created: {metadata['created_date']}\n"
+                if metadata.get("project_name"):
+                    metadata_section += f"Project: {metadata['project_name']}\n"
+                if metadata.get("chat_title"):
+                    metadata_section += f"Chat: {metadata['chat_title']}\n"
+                if metadata.get("chat_url"):
+                    metadata_section += f"URL: {metadata['chat_url']}\n"
+
+                description += metadata_section.rstrip()
+
+            if description:
+                event_data["description"] = description
 
             if "location" in params:
                 event_data["location"] = params["location"]

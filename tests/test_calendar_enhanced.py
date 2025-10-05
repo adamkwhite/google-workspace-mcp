@@ -414,6 +414,115 @@ class TestEnhancedCalendar:
         with pytest.raises(HttpError):
             await self.calendar_tools.delete_event(params)
 
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_create_event_with_metadata(self, mock_build):
+        """Test creating event with metadata appended to description."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        mock_created_event = {
+            "id": "event-with-metadata",
+            "summary": "Team Meeting",
+            "start": {
+                "dateTime": "2025-09-28T14:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T15:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "description": (
+                "Discuss project updates\n\n---\n📋 Context:\n"
+                "Created: 2025-09-28\nProject: Q4 Planning\n"
+                "Chat: Team Sync Discussion\n"
+                "URL: https://claude.ai/chat/abc123"
+            ),
+            "htmlLink": "https://calendar.google.com/event-with-metadata",
+            "status": "confirmed",
+            "created": "2025-09-28T10:00:00Z",
+        }
+
+        mock_service.events().insert().execute.return_value = mock_created_event
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "summary": "Team Meeting",
+            "start_time": "2025-09-28T14:00:00-04:00",
+            "end_time": "2025-09-28T15:00:00-04:00",
+            "description": "Discuss project updates",
+            "metadata": {
+                "created_date": "2025-09-28",
+                "project_name": "Q4 Planning",
+                "chat_title": "Team Sync Discussion",
+                "chat_url": "https://claude.ai/chat/abc123",
+            },
+        }
+
+        result = await self.calendar_tools.create_event(params)
+
+        assert result["id"] == "event-with-metadata"
+        assert "computed" in result
+
+        # Verify the event was created with metadata in description
+        call_args = mock_service.events().insert.call_args
+        event_body = call_args.kwargs["body"]
+        assert "📋 Context:" in event_body["description"]
+        assert "Created: 2025-09-28" in event_body["description"]
+        assert "Project: Q4 Planning" in event_body["description"]
+        assert "Chat: Team Sync Discussion" in event_body["description"]
+        assert "URL: https://claude.ai/chat/abc123" in event_body["description"]
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_create_event_with_partial_metadata(self, mock_build):
+        """Test creating event with partial metadata."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        mock_created_event = {
+            "id": "event-partial-meta",
+            "summary": "Quick Task",
+            "start": {
+                "dateTime": "2025-09-29T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-29T10:30:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "description": "Task notes\n\n---\n📋 Context:\nChat: Daily Planning",
+            "htmlLink": "https://calendar.google.com/event-partial-meta",
+            "status": "confirmed",
+            "created": "2025-09-29T09:00:00Z",
+        }
+
+        mock_service.events().insert().execute.return_value = mock_created_event
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "summary": "Quick Task",
+            "start_time": "2025-09-29T10:00:00-04:00",
+            "end_time": "2025-09-29T10:30:00-04:00",
+            "description": "Task notes",
+            "metadata": {
+                "chat_title": "Daily Planning",
+                # Only chat_title provided, others omitted
+            },
+        }
+
+        result = await self.calendar_tools.create_event(params)
+
+        assert result["id"] == "event-partial-meta"
+
+        # Verify only chat_title was added
+        call_args = mock_service.events().insert.call_args
+        event_body = call_args.kwargs["body"]
+        assert "📋 Context:" in event_body["description"]
+        assert "Chat: Daily Planning" in event_body["description"]
+        assert "Project:" not in event_body["description"]
+        assert "Created:" not in event_body["description"]
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
