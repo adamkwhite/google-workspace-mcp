@@ -185,6 +185,235 @@ class TestEnhancedCalendar:
         assert computed["spansMultipleDays"] is True
         assert "days" in computed["duration"]  # Should include days in duration
 
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_basic(self, mock_build):
+        """Test updating a calendar event."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Mock existing event
+        existing_event = {
+            "id": "event-123",
+            "summary": "Old Title",
+            "start": {
+                "dateTime": "2025-09-28T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T11:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+        }
+
+        # Mock updated event response
+        updated_event = {
+            "id": "event-123",
+            "summary": "New Title",
+            "start": {
+                "dateTime": "2025-09-28T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T11:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "htmlLink": "https://calendar.google.com/event-123",
+            "status": "confirmed",
+            "updated": "2025-09-25T10:30:00Z",
+        }
+
+        mock_service.events().get().execute.return_value = existing_event
+        mock_service.events().update().execute.return_value = updated_event
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "summary": "New Title",
+        }
+
+        result = await self.calendar_tools.update_event(params)
+
+        assert result["id"] == "event-123"
+        assert result["summary"] == "New Title"
+        assert "computed" in result
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_with_time_change(self, mock_build):
+        """Test updating event with time changes."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-456",
+            "summary": "Meeting",
+            "start": {
+                "dateTime": "2025-09-28T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T11:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+        }
+
+        updated_event = {
+            "id": "event-456",
+            "summary": "Meeting",
+            "start": {
+                "dateTime": "2025-09-28T14:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T15:30:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "htmlLink": "https://calendar.google.com/event-456",
+            "status": "confirmed",
+            "updated": "2025-09-25T11:00:00Z",
+        }
+
+        mock_service.events().get().execute.return_value = existing_event
+        mock_service.events().update().execute.return_value = updated_event
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-456",
+            "start_time": "2025-09-28T14:00:00-04:00",
+            "end_time": "2025-09-28T15:30:00-04:00",
+        }
+
+        result = await self.calendar_tools.update_event(params)
+
+        assert result["id"] == "event-456"
+        assert result["start"]["dateTime"] == "2025-09-28T14:00:00-04:00"
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_with_attendees(self, mock_build):
+        """Test updating event with attendees."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-789",
+            "summary": "Team Meeting",
+            "start": {
+                "dateTime": "2025-09-28T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T11:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+        }
+
+        updated_event = {
+            "id": "event-789",
+            "summary": "Team Meeting",
+            "start": {
+                "dateTime": "2025-09-28T10:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "end": {
+                "dateTime": "2025-09-28T11:00:00-04:00",
+                "timeZone": "America/Toronto",
+            },
+            "attendees": [
+                {"email": "alice@example.com"},
+                {"email": "bob@example.com"},
+            ],
+            "htmlLink": "https://calendar.google.com/event-789",
+            "status": "confirmed",
+            "updated": "2025-09-25T12:00:00Z",
+        }
+
+        mock_service.events().get().execute.return_value = existing_event
+        mock_service.events().update().execute.return_value = updated_event
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-789",
+            "attendees": ["alice@example.com", "bob@example.com"],
+        }
+
+        result = await self.calendar_tools.update_event(params)
+
+        assert result["id"] == "event-789"
+        assert "computed" in result
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_delete_event_success(self, mock_build):
+        """Test deleting a calendar event."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        mock_service.events().delete().execute.return_value = None
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {"calendar_id": "primary", "event_id": "event-to-delete"}
+
+        result = await self.calendar_tools.delete_event(params)
+
+        assert result["success"] is True
+        assert "deleted successfully" in result["message"]
+        assert "event-to-delete" in result["message"]
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_error_handling(self, mock_build):
+        """Test error handling when updating event."""
+        from googleapiclient.errors import HttpError
+
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Mock HTTP error
+        mock_service.events().get().execute.side_effect = HttpError(
+            resp=Mock(status=404), content=b"Not Found"
+        )
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "nonexistent",
+            "summary": "New Title",
+        }
+
+        with pytest.raises(HttpError):
+            await self.calendar_tools.update_event(params)
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_delete_event_error_handling(self, mock_build):
+        """Test error handling when deleting event."""
+        from googleapiclient.errors import HttpError
+
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Mock HTTP error
+        mock_service.events().delete().execute.side_effect = HttpError(
+            resp=Mock(status=403), content=b"Forbidden"
+        )
+
+        self.mock_auth_manager.get_credentials.return_value = Mock()
+
+        params = {"calendar_id": "primary", "event_id": "forbidden-event"}
+
+        with pytest.raises(HttpError):
+            await self.calendar_tools.delete_event(params)
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

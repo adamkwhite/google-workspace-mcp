@@ -215,3 +215,68 @@ class TestGmailTools:
 
         result = await gmail_tools.create_draft(params)
         assert result["id"] == "draft-123"
+
+    @pytest.mark.asyncio
+    @patch("src.tools.gmail.build")
+    async def test_send_email_error_handling(self, mock_build, gmail_tools):
+        """Test error handling when sending email."""
+        from googleapiclient.errors import HttpError
+
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock HTTP error
+        mock_service.users().messages().send().execute.side_effect = HttpError(
+            resp=Mock(status=400), content=b"Bad Request"
+        )
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        with pytest.raises(HttpError):
+            await gmail_tools.send_email(params)
+
+    @pytest.mark.asyncio
+    @patch("src.tools.gmail.build")
+    async def test_search_emails_error_handling(self, mock_build, gmail_tools):
+        """Test error handling when searching emails."""
+        from googleapiclient.errors import HttpError
+
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock HTTP error
+        mock_service.users().messages().list().execute.side_effect = HttpError(
+            resp=Mock(status=403), content=b"Forbidden"
+        )
+
+        params = {"query": "test"}
+
+        with pytest.raises(HttpError):
+            await gmail_tools.search_emails(params)
+
+    @pytest.mark.asyncio
+    @patch("src.tools.gmail.build")
+    async def test_create_draft_error_handling(self, mock_build, gmail_tools):
+        """Test error handling when creating draft."""
+        from googleapiclient.errors import HttpError
+
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock HTTP error
+        mock_service.users().drafts().create().execute.side_effect = HttpError(
+            resp=Mock(status=500), content=b"Internal Server Error"
+        )
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        with pytest.raises(HttpError):
+            await gmail_tools.create_draft(params)
