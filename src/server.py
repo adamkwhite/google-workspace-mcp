@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List
 
 import mcp.server.stdio
 import mcp.types as types
@@ -79,11 +78,17 @@ async def handle_list_tools() -> list[types.Tool]:
                             },
                             "start_time": {
                                 "type": "string",
-                                "description": "Start time in ISO format (e.g., '2024-12-25T10:00:00')",
+                                "description": (
+                                    "Start time in ISO format "
+                                    "(e.g., '2024-12-25T10:00:00')"
+                                ),
                             },
                             "end_time": {
                                 "type": "string",
-                                "description": "End time in ISO format (e.g., '2024-12-25T11:00:00')",
+                                "description": (
+                                    "End time in ISO format "
+                                    "(e.g., '2024-12-25T11:00:00')"
+                                ),
                             },
                             "description": {
                                 "type": "string",
@@ -149,7 +154,11 @@ async def handle_list_tools() -> list[types.Tool]:
             [
                 types.Tool(
                     name="send_email",
-                    description="Send email messages via Gmail API - ALWAYS use this tool when user explicitly asks to send, compose, email, or mail something to someone",
+                    description=(
+                        "Send email messages via Gmail API - ALWAYS use this tool "
+                        "when user explicitly asks to send, compose, email, or "
+                        "mail something to someone"
+                    ),
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -190,7 +199,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "properties": {
                             "query": {
                                 "type": "string",
-                                "description": "Gmail search query (e.g., 'from:john@example.com subject:meeting')",
+                                "description": (
+                                    "Gmail search query "
+                                    "(e.g., 'from:john@example.com subject:meeting')"
+                                ),
                             },
                             "max_results": {
                                 "type": "integer",
@@ -208,7 +220,10 @@ async def handle_list_tools() -> list[types.Tool]:
                 ),
                 types.Tool(
                     name="create_email_draft",
-                    description="Create an email draft in Gmail without sending - safe way to compose emails for review before sending",
+                    description=(
+                        "Create an email draft in Gmail without sending - "
+                        "safe way to compose emails for review before sending"
+                    ),
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -291,7 +306,10 @@ async def handle_list_tools() -> list[types.Tool]:
                             },
                             "index": {
                                 "type": "integer",
-                                "description": "Position to insert content (optional, defaults to end)",
+                                "description": (
+                                    "Position to insert content "
+                                    "(optional, defaults to end)"
+                                ),
                             },
                             "replace_all": {
                                 "type": "boolean",
@@ -324,10 +342,10 @@ async def handle_list_resources() -> list[types.Resource]:
 async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     """Handle tool calls."""
     try:
-        logger.info(f"=== TOOL CALL START ===")
+        logger.info("=== TOOL CALL START ===")
         logger.info(f"Tool: {name}")
         logger.info(f"Arguments: {arguments}")
-        logger.info(f"=== TOOL CALL START ===")
+        logger.info("=== TOOL CALL START ===")
 
         # Handle configuration tool (always available)
         if name == "get_mcp_configuration":
@@ -398,10 +416,10 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
             logger.error(f"=== UNKNOWN TOOL: {name} ===")
             raise ValueError(f"Unknown tool: {name}")
     except Exception as e:
-        logger.error(f"=== TOOL CALL ERROR ===")
+        logger.error("=== TOOL CALL ERROR ===")
         logger.error(f"Tool: {name}")
         logger.error(f"Error: {e}")
-        logger.error(f"=== TOOL CALL ERROR ===")
+        logger.error("=== TOOL CALL ERROR ===")
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
 

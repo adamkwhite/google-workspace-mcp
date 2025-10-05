@@ -1,7 +1,6 @@
 """Integration tests for enhanced calendar functionality with computed fields."""
 
-import asyncio
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -74,7 +73,7 @@ class TestEnhancedCalendar:
         assert computed["startDate"] == "2025-09-27"
         assert computed["endDate"] == "2025-09-27"
         assert computed["duration"] == "30 minutes"
-        assert computed["spansMultipleDays"] == False
+        assert computed["spansMultipleDays"] is False
 
         # Verify original fields are preserved
         assert event["id"] == "test-event-id"
@@ -131,7 +130,7 @@ class TestEnhancedCalendar:
         assert computed["startDate"] == "2025-09-28"
         assert computed["endDate"] == "2025-09-28"
         assert computed["duration"] == "1 hour 30 minutes"
-        assert computed["spansMultipleDays"] == False
+        assert computed["spansMultipleDays"] is False
 
         # Verify original fields are preserved
         assert result["id"] == "new-event-id"
@@ -178,7 +177,7 @@ class TestEnhancedCalendar:
         assert computed["endDay"] == "Monday"
         assert computed["startDate"] == "2025-09-27"
         assert computed["endDate"] == "2025-09-29"
-        assert computed["spansMultipleDays"] == True
+        assert computed["spansMultipleDays"] is True
         assert "days" in computed["duration"]  # Should include days in duration
 
 

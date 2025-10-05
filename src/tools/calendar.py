@@ -3,14 +3,13 @@
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.date_helpers import add_computed_fields
+from utils.date_helpers import add_computed_fields  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

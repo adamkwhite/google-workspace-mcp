@@ -127,7 +127,7 @@ class GoogleAuthManager:
             with open(self.credentials_path, "r") as f:
                 data = json.load(f)
                 return data.get("type") == "service_account"
-        except:
+        except Exception:
             return False
 
     def get_credentials(self) -> Credentials:

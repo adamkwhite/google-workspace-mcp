@@ -1,7 +1,6 @@
 """Unit tests for date_helpers module."""
 
-from datetime import datetime, timedelta
-from unittest.mock import patch
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -188,19 +187,19 @@ class TestSpansMultipleDays:
         """Test event within same day."""
         start = datetime(2025, 9, 27, 12, 0, 0, tzinfo=ZoneInfo("America/Toronto"))
         end = datetime(2025, 9, 27, 14, 0, 0, tzinfo=ZoneInfo("America/Toronto"))
-        assert spans_multiple_days(start, end) == False
+        assert spans_multiple_days(start, end) is False
 
     def test_spans_multiple_days_different_days(self):
         """Test event spanning multiple days."""
         start = datetime(2025, 9, 27, 23, 0, 0, tzinfo=ZoneInfo("America/Toronto"))
         end = datetime(2025, 9, 28, 1, 0, 0, tzinfo=ZoneInfo("America/Toronto"))
-        assert spans_multiple_days(start, end) == True
+        assert spans_multiple_days(start, end) is True
 
     def test_spans_multiple_days_midnight_boundary(self):
         """Test event crossing midnight boundary."""
         start = datetime(2025, 9, 27, 23, 59, 59, tzinfo=ZoneInfo("America/Toronto"))
         end = datetime(2025, 9, 28, 0, 0, 1, tzinfo=ZoneInfo("America/Toronto"))
-        assert spans_multiple_days(start, end) == True
+        assert spans_multiple_days(start, end) is True
 
     def test_spans_multiple_days_timezone_aware(self):
         """Test multiple days check with timezone conversion."""
@@ -212,7 +211,7 @@ class TestSpansMultipleDays:
         # Convert end to same timezone as start for comparison
         end_toronto = end.astimezone(ZoneInfo("America/Toronto"))
         assert (
-            spans_multiple_days(start, end_toronto) == True
+            spans_multiple_days(start, end_toronto) is True
         )  # Different days in Toronto timezone
 
     def test_spans_multiple_days_none_raises_error(self):
@@ -249,7 +248,7 @@ class TestAddComputedFields:
         assert computed["startDate"] == "2025-09-27"
         assert computed["endDate"] == "2025-09-27"
         assert computed["duration"] == "30 minutes"
-        assert computed["spansMultipleDays"] == False
+        assert computed["spansMultipleDays"] is False
 
     def test_add_computed_fields_multi_day_event(self):
         """Test computed fields for multi-day event."""
@@ -273,7 +272,7 @@ class TestAddComputedFields:
         assert computed["endDay"] == "Monday"
         assert computed["startDate"] == "2025-09-27"
         assert computed["endDate"] == "2025-09-29"
-        assert computed["spansMultipleDays"] == True
+        assert computed["spansMultipleDays"] is True
         assert "days" in computed["duration"]
 
     def test_add_computed_fields_preserves_original(self):

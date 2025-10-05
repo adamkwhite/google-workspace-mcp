@@ -8,7 +8,7 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.tools.docs import GoogleDocsTools
+from src.tools.docs import GoogleDocsTools  # noqa: E402
 
 
 @pytest.fixture

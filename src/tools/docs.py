@@ -1,7 +1,7 @@
 """Google Docs tools for MCP server."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError

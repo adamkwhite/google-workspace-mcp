@@ -5,9 +5,8 @@ for enhancing calendar event responses with computed day-of-week and date inform
 """
 
 import logging
-import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, Optional
 from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)

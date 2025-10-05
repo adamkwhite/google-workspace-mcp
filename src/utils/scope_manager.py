@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
 
@@ -176,7 +175,7 @@ class ScopeManager:
         has_changes = required_scopes != current_scopes_set
 
         if has_changes:
-            logger.info(f"Scope changes detected:")
+            logger.info("Scope changes detected:")
             logger.info(f"  Current: {sorted(current_scopes_set)}")
             logger.info(f"  Required: {sorted(required_scopes)}")
 

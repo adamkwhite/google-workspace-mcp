@@ -1,14 +1,13 @@
-import json
 import os
 import sys
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from src.server import main, server
+from src.server import main, server  # noqa: E402
 
 
 class TestMCPServer:
