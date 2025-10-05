@@ -5,9 +5,14 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
-from date_helpers import (add_computed_fields, calculate_duration,
-                          get_date_string, get_day_of_week,
-                          parse_calendar_datetime, spans_multiple_days)
+from date_helpers import (
+    add_computed_fields,
+    calculate_duration,
+    get_date_string,
+    get_day_of_week,
+    parse_calendar_datetime,
+    spans_multiple_days,
+)
 
 
 class TestParseCalendarDatetime:
