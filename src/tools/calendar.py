@@ -31,6 +31,29 @@ class GoogleCalendarTools:
             self.service = build("calendar", "v3", credentials=creds)
         return self.service
 
+    def _format_metadata(self, metadata: Dict[str, Any]) -> str:
+        """Format metadata into a description section.
+
+        Args:
+            metadata: Dictionary with optional fields: created_date, project_name,
+                     chat_title, chat_url
+
+        Returns:
+            Formatted metadata string to append to description
+        """
+        metadata_section = "\n\n---\n📋 Context:\n"
+
+        if metadata.get("created_date"):
+            metadata_section += f"Created: {metadata['created_date']}\n"
+        if metadata.get("project_name"):
+            metadata_section += f"Project: {metadata['project_name']}\n"
+        if metadata.get("chat_title"):
+            metadata_section += f"Chat: {metadata['chat_title']}\n"
+        if metadata.get("chat_url"):
+            metadata_section += f"URL: {metadata['chat_url']}\n"
+
+        return metadata_section.rstrip()
+
     async def create_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new calendar event.
 
@@ -70,19 +93,7 @@ class GoogleCalendarTools:
 
             # Append metadata to description if provided
             if "metadata" in params and params["metadata"]:
-                metadata = params["metadata"]
-                metadata_section = "\n\n---\n📋 Context:\n"
-
-                if metadata.get("created_date"):
-                    metadata_section += f"Created: {metadata['created_date']}\n"
-                if metadata.get("project_name"):
-                    metadata_section += f"Project: {metadata['project_name']}\n"
-                if metadata.get("chat_title"):
-                    metadata_section += f"Chat: {metadata['chat_title']}\n"
-                if metadata.get("chat_url"):
-                    metadata_section += f"URL: {metadata['chat_url']}\n"
-
-                description += metadata_section.rstrip()
+                description += self._format_metadata(params["metadata"])
 
             if description:
                 event_data["description"] = description
