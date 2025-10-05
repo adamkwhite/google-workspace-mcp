@@ -30,6 +30,39 @@ calendar_tools = None
 gmail_tools = None
 docs_tools = None
 
+# Common email input schema (shared by send_email and create_email_draft)
+EMAIL_INPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "to": {
+            "type": ["string", "array"],
+            "description": "Recipient email address(es)",
+        },
+        "subject": {
+            "type": "string",
+            "description": "Email subject",
+        },
+        "body": {
+            "type": "string",
+            "description": "Email body content",
+        },
+        "cc": {
+            "type": ["string", "array"],
+            "description": "CC recipients (optional)",
+        },
+        "bcc": {
+            "type": ["string", "array"],
+            "description": "BCC recipients (optional)",
+        },
+        "html": {
+            "type": "boolean",
+            "description": "Whether the body is HTML formatted",
+            "default": False,
+        },
+    },
+    "required": ["to", "subject", "body"],
+}
+
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
@@ -159,37 +192,7 @@ async def handle_list_tools() -> list[types.Tool]:
                         "when user explicitly asks to send, compose, email, or "
                         "mail something to someone"
                     ),
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "to": {
-                                "type": ["string", "array"],
-                                "description": "Recipient email address(es)",
-                            },
-                            "subject": {
-                                "type": "string",
-                                "description": "Email subject",
-                            },
-                            "body": {
-                                "type": "string",
-                                "description": "Email body content",
-                            },
-                            "cc": {
-                                "type": ["string", "array"],
-                                "description": "CC recipients (optional)",
-                            },
-                            "bcc": {
-                                "type": ["string", "array"],
-                                "description": "BCC recipients (optional)",
-                            },
-                            "html": {
-                                "type": "boolean",
-                                "description": "Whether the body is HTML formatted",
-                                "default": False,
-                            },
-                        },
-                        "required": ["to", "subject", "body"],
-                    },
+                    inputSchema=EMAIL_INPUT_SCHEMA,
                 ),
                 types.Tool(
                     name="search_emails",
@@ -224,37 +227,7 @@ async def handle_list_tools() -> list[types.Tool]:
                         "Create an email draft in Gmail without sending - "
                         "safe way to compose emails for review before sending"
                     ),
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "to": {
-                                "type": ["string", "array"],
-                                "description": "Recipient email address(es)",
-                            },
-                            "subject": {
-                                "type": "string",
-                                "description": "Email subject",
-                            },
-                            "body": {
-                                "type": "string",
-                                "description": "Email body content",
-                            },
-                            "cc": {
-                                "type": ["string", "array"],
-                                "description": "CC recipients (optional)",
-                            },
-                            "bcc": {
-                                "type": ["string", "array"],
-                                "description": "BCC recipients (optional)",
-                            },
-                            "html": {
-                                "type": "boolean",
-                                "description": "Whether the body is HTML formatted",
-                                "default": False,
-                            },
-                        },
-                        "required": ["to", "subject", "body"],
-                    },
+                    inputSchema=EMAIL_INPUT_SCHEMA,
                 ),
             ]
         )
