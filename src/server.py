@@ -373,19 +373,21 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         # Calendar tools
         if name in ["create_calendar_event", "list_calendars", "list_calendar_events"]:
             check_service_enabled("calendar", name)
+            assert calendar_tools is not None, "Calendar tools not initialized"
             if name == "create_calendar_event":
                 result = await calendar_tools.create_event(arguments)
                 return [types.TextContent(type="text", text=str(result))]
             elif name == "list_calendars":
                 result = await calendar_tools.list_calendars(arguments)
                 return [types.TextContent(type="text", text=str(result))]
-            elif name == "list_calendar_events":
+            else:  # list_calendar_events
                 result = await calendar_tools.list_events(arguments)
                 return [types.TextContent(type="text", text=str(result))]
 
         # Gmail tools
         elif name in ["send_email", "search_emails", "create_email_draft"]:
             check_service_enabled("gmail", name)
+            assert gmail_tools is not None, "Gmail tools not initialized"
             if name == "send_email":
                 logger.info(f"Processing send_email with arguments: {arguments}")
                 result = await gmail_tools.send_email(arguments)
@@ -394,7 +396,7 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
             elif name == "search_emails":
                 result = await gmail_tools.search_emails(arguments)
                 return [types.TextContent(type="text", text=str(result))]
-            elif name == "create_email_draft":
+            else:  # create_email_draft
                 logger.info(
                     f"Processing create_email_draft with arguments: {arguments}"
                 )
@@ -405,10 +407,11 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         # Google Docs tools
         elif name in ["create_google_doc", "update_google_doc"]:
             check_service_enabled("docs", name)
+            assert docs_tools is not None, "Docs tools not initialized"
             if name == "create_google_doc":
                 result = await docs_tools.create_document(arguments)
                 return [types.TextContent(type="text", text=str(result))]
-            elif name == "update_google_doc":
+            else:  # update_google_doc
                 result = await docs_tools.update_document(arguments)
                 return [types.TextContent(type="text", text=str(result))]
 

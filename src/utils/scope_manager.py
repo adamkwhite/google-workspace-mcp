@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ class ScopeManager:
 
         return has_changes
 
-    def save_config(self, config: Dict = None) -> bool:
+    def save_config(self, config: Optional[Dict] = None) -> bool:
         """Save configuration to file."""
         try:
             config_to_save = config or self.config

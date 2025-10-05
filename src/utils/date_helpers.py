@@ -234,6 +234,10 @@ def add_computed_fields(event: Dict[str, Any]) -> Dict[str, Any]:
         start_dt = parse_calendar_datetime(start_datetime_str, start_timezone)
         end_dt = parse_calendar_datetime(end_datetime_str, end_timezone)
 
+        # Verify datetime parsing succeeded
+        if start_dt is None or end_dt is None:
+            raise ValueError("Failed to parse start or end datetime")
+
         # Calculate computed fields
         computed = {
             "startDay": get_day_of_week(start_dt),

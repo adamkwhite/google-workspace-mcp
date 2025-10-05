@@ -124,6 +124,8 @@ class GoogleAuthManager:
         import json
 
         try:
+            if not self.credentials_path:
+                return False
             with open(self.credentials_path, "r") as f:
                 data = json.load(f)
                 return data.get("type") == "service_account"

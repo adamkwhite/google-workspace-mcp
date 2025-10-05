@@ -43,11 +43,11 @@ class GmailTools:
         """
         try:
             # Create message
+            message = MIMEMultipart("alternative")
             if params.get("html", False):
-                message = MIMEMultipart("alternative")
                 message.attach(MIMEText(params["body"], "html"))
             else:
-                message = MIMEText(params["body"])
+                message.attach(MIMEText(params["body"], "plain"))
 
             # Handle recipients
             to_addresses = (
@@ -201,11 +201,11 @@ class GmailTools:
         """
         try:
             # Create message same as send_email
+            message = MIMEMultipart("alternative")
             if params.get("html", False):
-                message = MIMEMultipart("alternative")
                 message.attach(MIMEText(params["body"], "html"))
             else:
-                message = MIMEText(params["body"])
+                message.attach(MIMEText(params["body"], "plain"))
 
             # Handle recipients
             to_addresses = (
