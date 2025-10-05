@@ -1,10 +1,15 @@
 """Integration tests for enhanced calendar functionality with computed fields."""
 
+import os
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
 
-from src.tools.calendar import GoogleCalendarTools
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+from tools.calendar import GoogleCalendarTools  # noqa: E402
 
 
 class TestEnhancedCalendar:
@@ -15,7 +20,7 @@ class TestEnhancedCalendar:
         self.mock_auth_manager = Mock()
         self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
 
-    @patch("src.tools.calendar.build")
+    @patch("tools.calendar.build")
     @pytest.mark.asyncio
     async def test_list_events_with_computed_fields(self, mock_build):
         """Test that list_events includes computed fields in response."""
@@ -80,7 +85,7 @@ class TestEnhancedCalendar:
         assert event["summary"] == "Test Event"
         assert event["location"] == "Test Location"
 
-    @patch("src.tools.calendar.build")
+    @patch("tools.calendar.build")
     @pytest.mark.asyncio
     async def test_create_event_with_computed_fields(self, mock_build):
         """Test that create_event includes computed fields in response."""
@@ -136,7 +141,7 @@ class TestEnhancedCalendar:
         assert result["id"] == "new-event-id"
         assert result["summary"] == "New Event"
 
-    @patch("src.tools.calendar.build")
+    @patch("tools.calendar.build")
     @pytest.mark.asyncio
     async def test_multi_day_event_computed_fields(self, mock_build):
         """Test computed fields for multi-day events."""
