@@ -26,6 +26,45 @@ class GmailTools:
             self.service = build("gmail", "v1", credentials=creds)
         return self.service
 
+    def _create_message(self, params: Dict[str, Any]) -> MIMEMultipart:
+        """Create MIME message from parameters (shared by send and draft).
+
+        Args:
+            params: Dictionary containing email parameters
+
+        Returns:
+            MIME message ready to be encoded
+        """
+        # Create message
+        message = MIMEMultipart("alternative")
+        if params.get("html", False):
+            message.attach(MIMEText(params["body"], "html"))
+        else:
+            message.attach(MIMEText(params["body"], "plain"))
+
+        # Handle recipients
+        to_addresses = (
+            params["to"] if isinstance(params["to"], list) else [params["to"]]
+        )
+        message["to"] = ", ".join(to_addresses)
+        message["subject"] = params["subject"]
+
+        if "cc" in params:
+            cc_addresses = (
+                params["cc"] if isinstance(params["cc"], list) else [params["cc"]]
+            )
+            message["cc"] = ", ".join(cc_addresses)
+
+        if "bcc" in params:
+            bcc_addresses = (
+                params["bcc"]
+                if isinstance(params["bcc"], list)
+                else [params["bcc"]]
+            )
+            message["bcc"] = ", ".join(bcc_addresses)
+
+        return message
+
     async def send_email(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Send an email.
 
@@ -42,33 +81,8 @@ class GmailTools:
             Dictionary with sent message information
         """
         try:
-            # Create message
-            message = MIMEMultipart("alternative")
-            if params.get("html", False):
-                message.attach(MIMEText(params["body"], "html"))
-            else:
-                message.attach(MIMEText(params["body"], "plain"))
-
-            # Handle recipients
-            to_addresses = (
-                params["to"] if isinstance(params["to"], list) else [params["to"]]
-            )
-            message["to"] = ", ".join(to_addresses)
-            message["subject"] = params["subject"]
-
-            if "cc" in params:
-                cc_addresses = (
-                    params["cc"] if isinstance(params["cc"], list) else [params["cc"]]
-                )
-                message["cc"] = ", ".join(cc_addresses)
-
-            if "bcc" in params:
-                bcc_addresses = (
-                    params["bcc"]
-                    if isinstance(params["bcc"], list)
-                    else [params["bcc"]]
-                )
-                message["bcc"] = ", ".join(bcc_addresses)
+            # Create message using shared method
+            message = self._create_message(params)
 
             # Encode the message
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
@@ -200,33 +214,8 @@ class GmailTools:
             Dictionary with draft information
         """
         try:
-            # Create message same as send_email
-            message = MIMEMultipart("alternative")
-            if params.get("html", False):
-                message.attach(MIMEText(params["body"], "html"))
-            else:
-                message.attach(MIMEText(params["body"], "plain"))
-
-            # Handle recipients
-            to_addresses = (
-                params["to"] if isinstance(params["to"], list) else [params["to"]]
-            )
-            message["to"] = ", ".join(to_addresses)
-            message["subject"] = params["subject"]
-
-            if "cc" in params:
-                cc_addresses = (
-                    params["cc"] if isinstance(params["cc"], list) else [params["cc"]]
-                )
-                message["cc"] = ", ".join(cc_addresses)
-
-            if "bcc" in params:
-                bcc_addresses = (
-                    params["bcc"]
-                    if isinstance(params["bcc"], list)
-                    else [params["bcc"]]
-                )
-                message["bcc"] = ", ".join(bcc_addresses)
+            # Create message using shared method
+            message = self._create_message(params)
 
             # Encode the message
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")

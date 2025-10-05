@@ -13,6 +13,9 @@ from utils.date_helpers import add_computed_fields  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
+# Default timezone constant
+DEFAULT_TIMEZONE = "America/Toronto"
+
 
 class GoogleCalendarTools:
     """Handles Google Calendar operations."""
@@ -53,11 +56,11 @@ class GoogleCalendarTools:
                 "summary": params["summary"],
                 "start": {
                     "dateTime": params["start_time"],
-                    "timeZone": params.get("timezone", "America/Toronto"),
+                    "timeZone": params.get("timezone", DEFAULT_TIMEZONE),
                 },
                 "end": {
                     "dateTime": params["end_time"],
-                    "timeZone": params.get("timezone", "America/Toronto"),
+                    "timeZone": params.get("timezone", DEFAULT_TIMEZONE),
                 },
             }
 
@@ -147,13 +150,13 @@ class GoogleCalendarTools:
                 event["start"] = {
                     "dateTime": params["start_time"],
                     "timeZone": params.get(
-                        "timezone", event["start"].get("timeZone", "America/Toronto")
+                        "timezone", event["start"].get("timeZone", DEFAULT_TIMEZONE)
                     ),
                 }
                 event["end"] = {
                     "dateTime": params["end_time"],
                     "timeZone": params.get(
-                        "timezone", event["end"].get("timeZone", "America/Toronto")
+                        "timezone", event["end"].get("timeZone", DEFAULT_TIMEZONE)
                     ),
                 }
 
