@@ -60,7 +60,7 @@ def test_mcp_server():
 def generate_claude_config():
     """Generate Claude MCP configuration for WSL"""
     # Use WSL path format for Claude configuration
-    wsl_path = f"/home/adam/Code/calendar-mcp/src/server.py"
+    wsl_path = "/home/adam/Code/calendar-mcp/src/server.py"
     
     config = {
         "mcpServers": {

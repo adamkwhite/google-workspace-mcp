@@ -110,6 +110,31 @@ def get_date_string(dt: datetime) -> str:
         raise ValueError(f"Failed to format date string: {e}")
 
 
+def _format_duration_parts(days: int, hours: int, minutes: int) -> str:
+    """Format duration parts into human-readable string.
+
+    Args:
+        days: Number of days
+        hours: Number of hours
+        minutes: Number of minutes
+
+    Returns:
+        Formatted duration string
+    """
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes > 0:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+
+    if not parts:
+        return "less than 1 minute"
+
+    return " ".join(parts)
+
+
 def calculate_duration(start_dt: datetime, end_dt: datetime) -> str:
     """Calculate human-readable duration between two datetime objects.
 
@@ -143,18 +168,7 @@ def calculate_duration(start_dt: datetime, end_dt: datetime) -> str:
         hours = (total_seconds % (24 * 3600)) // 3600
         minutes = (total_seconds % 3600) // 60
 
-        parts = []
-        if days > 0:
-            parts.append(f"{days} day{'s' if days != 1 else ''}")
-        if hours > 0:
-            parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
-        if minutes > 0:
-            parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
-
-        if not parts:
-            return "less than 1 minute"
-
-        return " ".join(parts)
+        return _format_duration_parts(days, hours, minutes)
 
     except Exception as e:
         logger.error(
