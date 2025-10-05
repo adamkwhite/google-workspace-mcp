@@ -113,10 +113,13 @@ class TestServerIntegration:
     @pytest.mark.asyncio
     async def test_handle_call_tool_unknown(self):
         """Test handling of unknown tool"""
-        from src.server import handle_call_tool
+        with patch("src.server.auth_manager") as mock_auth:
+            mock_auth.creds = Mock()
 
-        result = await handle_call_tool("nonexistent_tool", {})
-        assert "Unknown tool" in result[0].text
+            from src.server import handle_call_tool
+
+            result = await handle_call_tool("nonexistent_tool", {})
+            assert "Unknown tool" in result[0].text
 
     @pytest.mark.asyncio
     async def test_calendar_create_event(self):
