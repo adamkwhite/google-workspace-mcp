@@ -31,6 +31,29 @@ class GoogleCalendarTools:
             self.service = build("calendar", "v3", credentials=creds)
         return self.service
 
+    def _format_metadata(self, metadata: Dict[str, Any]) -> str:
+        """Format metadata into a description section.
+
+        Args:
+            metadata: Dictionary with optional fields: created_date, project_name,
+                     chat_title, chat_url
+
+        Returns:
+            Formatted metadata string to append to description
+        """
+        metadata_section = "\n\n---\n📋 Context:\n"
+
+        if metadata.get("created_date"):
+            metadata_section += f"Created: {metadata['created_date']}\n"
+        if metadata.get("project_name"):
+            metadata_section += f"Project: {metadata['project_name']}\n"
+        if metadata.get("chat_title"):
+            metadata_section += f"Chat: {metadata['chat_title']}\n"
+        if metadata.get("chat_url"):
+            metadata_section += f"URL: {metadata['chat_url']}\n"
+
+        return metadata_section.rstrip()
+
     async def create_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new calendar event.
 
@@ -44,6 +67,7 @@ class GoogleCalendarTools:
                 - location: Event location (optional)
                 - attendees: List of attendee emails (optional)
                 - timezone: Timezone (defaults to America/Toronto)
+                - metadata: Dict with chat_title, chat_url, project_name, created_date (optional)
 
         Returns:
             Dictionary with event information including ID and link
@@ -65,8 +89,14 @@ class GoogleCalendarTools:
             }
 
             # Add optional fields
-            if "description" in params:
-                event_data["description"] = params["description"]
+            description = params.get("description", "")
+
+            # Append metadata to description if provided
+            if "metadata" in params and params["metadata"]:
+                description += self._format_metadata(params["metadata"])
+
+            if description:
+                event_data["description"] = description
 
             if "location" in params:
                 event_data["location"] = params["location"]
@@ -246,7 +276,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error deleting event: {e}")
             raise
 
-    async def list_calendars(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def list_calendars(self) -> Dict[str, Any]:
         """List all available calendars.
 
         Returns:

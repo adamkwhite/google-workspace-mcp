@@ -141,6 +141,28 @@ async def handle_list_tools() -> list[types.Tool]:
                                 "description": "Timezone (e.g., 'America/Toronto')",
                                 "default": "America/Toronto",
                             },
+                            "metadata": {
+                                "type": "object",
+                                "description": "Optional metadata for traceability (optional)",
+                                "properties": {
+                                    "chat_title": {
+                                        "type": "string",
+                                        "description": "Title of the chat/conversation",
+                                    },
+                                    "chat_url": {
+                                        "type": "string",
+                                        "description": "URL to the chat/conversation",
+                                    },
+                                    "project_name": {
+                                        "type": "string",
+                                        "description": "Project name (if applicable)",
+                                    },
+                                    "created_date": {
+                                        "type": "string",
+                                        "description": "Date when event was created",
+                                    },
+                                },
+                            },
                         },
                         "required": ["summary", "start_time", "end_time"],
                     },
@@ -311,6 +333,50 @@ async def handle_list_resources() -> list[types.Resource]:
     return []
 
 
+async def _handle_calendar_tool(name: str, arguments: dict) -> types.TextContent:
+    """Handle calendar tool calls."""
+    assert calendar_tools is not None, "Calendar tools not initialized"
+
+    if name == "create_calendar_event":
+        result = await calendar_tools.create_event(arguments)
+    elif name == "list_calendars":
+        result = await calendar_tools.list_calendars()
+    else:  # list_calendar_events
+        result = await calendar_tools.list_events(arguments)
+
+    return types.TextContent(type="text", text=str(result))
+
+
+async def _handle_gmail_tool(name: str, arguments: dict) -> types.TextContent:
+    """Handle Gmail tool calls."""
+    assert gmail_tools is not None, "Gmail tools not initialized"
+
+    if name == "send_email":
+        logger.info(f"Processing send_email with arguments: {arguments}")
+        result = await gmail_tools.send_email(arguments)
+        logger.info(f"Email send result: {result}")
+    elif name == "search_emails":
+        result = await gmail_tools.search_emails(arguments)
+    else:  # create_email_draft
+        logger.info(f"Processing create_email_draft with arguments: {arguments}")
+        result = await gmail_tools.create_draft(arguments)
+        logger.info(f"Email draft result: {result}")
+
+    return types.TextContent(type="text", text=str(result))
+
+
+async def _handle_docs_tool(name: str, arguments: dict) -> types.TextContent:
+    """Handle Docs tool calls."""
+    assert docs_tools is not None, "Docs tools not initialized"
+
+    if name == "create_google_doc":
+        result = await docs_tools.create_document(arguments)
+    else:  # update_google_doc
+        result = await docs_tools.update_document(arguments)
+
+    return types.TextContent(type="text", text=str(result))
+
+
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent]:
     """Handle tool calls."""
@@ -346,47 +412,17 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         # Calendar tools
         if name in ["create_calendar_event", "list_calendars", "list_calendar_events"]:
             check_service_enabled("calendar", name)
-            assert calendar_tools is not None, "Calendar tools not initialized"
-            if name == "create_calendar_event":
-                result = await calendar_tools.create_event(arguments)
-                return [types.TextContent(type="text", text=str(result))]
-            elif name == "list_calendars":
-                result = await calendar_tools.list_calendars(arguments)
-                return [types.TextContent(type="text", text=str(result))]
-            else:  # list_calendar_events
-                result = await calendar_tools.list_events(arguments)
-                return [types.TextContent(type="text", text=str(result))]
+            return [await _handle_calendar_tool(name, arguments)]
 
         # Gmail tools
         elif name in ["send_email", "search_emails", "create_email_draft"]:
             check_service_enabled("gmail", name)
-            assert gmail_tools is not None, "Gmail tools not initialized"
-            if name == "send_email":
-                logger.info(f"Processing send_email with arguments: {arguments}")
-                result = await gmail_tools.send_email(arguments)
-                logger.info(f"Email send result: {result}")
-                return [types.TextContent(type="text", text=str(result))]
-            elif name == "search_emails":
-                result = await gmail_tools.search_emails(arguments)
-                return [types.TextContent(type="text", text=str(result))]
-            else:  # create_email_draft
-                logger.info(
-                    f"Processing create_email_draft with arguments: {arguments}"
-                )
-                result = await gmail_tools.create_draft(arguments)
-                logger.info(f"Email draft result: {result}")
-                return [types.TextContent(type="text", text=str(result))]
+            return [await _handle_gmail_tool(name, arguments)]
 
         # Google Docs tools
         elif name in ["create_google_doc", "update_google_doc"]:
             check_service_enabled("docs", name)
-            assert docs_tools is not None, "Docs tools not initialized"
-            if name == "create_google_doc":
-                result = await docs_tools.create_document(arguments)
-                return [types.TextContent(type="text", text=str(result))]
-            else:  # update_google_doc
-                result = await docs_tools.update_document(arguments)
-                return [types.TextContent(type="text", text=str(result))]
+            return [await _handle_docs_tool(name, arguments)]
 
         else:
             logger.error(f"=== UNKNOWN TOOL: {name} ===")
