@@ -1,15 +1,15 @@
 """Authentication module for Google Workspace APIs."""
 
+import logging
 import os
 import pickle
-import logging
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2 import service_account
 
 from utils.scope_manager import ScopeManager
 
@@ -18,19 +18,27 @@ logger = logging.getLogger(__name__)
 
 class GoogleAuthManager:
     """Manages authentication for Google Workspace APIs."""
-    
+
     def __init__(self, credentials_path: Optional[str] = None):
-        self.credentials_path = credentials_path or os.getenv('GOOGLE_CREDENTIALS_PATH', 'config/credentials.json')
-        self.token_path = Path('config/token.pickle')
+        self.credentials_path = credentials_path or os.getenv(
+            "GOOGLE_CREDENTIALS_PATH", "config/credentials.json"
+        )
+        self.token_path = Path("config/token.pickle")
         self.creds: Optional[Credentials] = None
 
         # Initialize scope manager
         self.scope_manager = ScopeManager()
 
         # Security: Restrict file creation to specific folders
-        self.allowed_folder_ids = os.getenv('GOOGLE_ALLOWED_FOLDERS', '').split(',') if os.getenv('GOOGLE_ALLOWED_FOLDERS') else []
-        self.default_folder_id = os.getenv('GOOGLE_DEFAULT_FOLDER')  # Optional: default folder for new files
-        
+        self.allowed_folder_ids = (
+            os.getenv("GOOGLE_ALLOWED_FOLDERS", "").split(",")
+            if os.getenv("GOOGLE_ALLOWED_FOLDERS")
+            else []
+        )
+        self.default_folder_id = os.getenv(
+            "GOOGLE_DEFAULT_FOLDER"
+        )  # Optional: default folder for new files
+
     async def initialize(self):
         """Initialize authentication."""
         # Validate scope configuration first
@@ -47,11 +55,11 @@ class GoogleAuthManager:
         needs_reauth = False
         if os.path.exists(self.token_path):
             logger.info("Loading existing credentials...")
-            with open(self.token_path, 'rb') as token:
+            with open(self.token_path, "rb") as token:
                 self.creds = pickle.load(token)
 
             # Check if scopes have changed
-            if hasattr(self.creds, 'scopes') and self.creds.scopes:
+            if hasattr(self.creds, "scopes") and self.creds.scopes:
                 current_scopes = list(self.creds.scopes)
                 needs_reauth = self.scope_manager.has_scope_changes(current_scopes)
 
@@ -60,7 +68,12 @@ class GoogleAuthManager:
                     self.creds = None  # Force re-authentication
 
         if not self.creds or not self.creds.valid or needs_reauth:
-            if self.creds and self.creds.expired and self.creds.refresh_token and not needs_reauth:
+            if (
+                self.creds
+                and self.creds.expired
+                and self.creds.refresh_token
+                and not needs_reauth
+            ):
                 logger.info("Refreshing expired credentials...")
                 self.creds.refresh(Request())
             else:
@@ -69,11 +82,11 @@ class GoogleAuthManager:
 
             # Save credentials for next run
             self.token_path.parent.mkdir(exist_ok=True)
-            with open(self.token_path, 'wb') as token:
+            with open(self.token_path, "wb") as token:
                 pickle.dump(self.creds, token)
 
         logger.info("Authentication successful!")
-        
+
     async def _authenticate(self):
         """Perform OAuth2 authentication flow."""
         required_scopes = self.scope_manager.get_required_scopes()
@@ -88,7 +101,9 @@ class GoogleAuthManager:
             else:
                 # OAuth2 flow for regular Gmail accounts
                 enabled_services = self.scope_manager.get_enabled_services()
-                logger.info(f"Starting OAuth2 flow for services: {list(enabled_services)}")
+                logger.info(
+                    f"Starting OAuth2 flow for services: {list(enabled_services)}"
+                )
                 flow = InstalledAppFlow.from_client_secrets_file(
                     self.credentials_path, required_scopes
                 )
@@ -103,17 +118,20 @@ class GoogleAuthManager:
                 "2. Create OAuth client ID (Desktop application)\n"
                 "3. Download and save as config/credentials.json"
             )
-            
+
     def _is_service_account(self) -> bool:
         """Check if the credentials file is a service account key."""
         import json
+
         try:
-            with open(self.credentials_path, 'r') as f:
+            if not self.credentials_path:
+                return False
+            with open(self.credentials_path, "r") as f:
                 data = json.load(f)
-                return data.get('type') == 'service_account'
-        except:
+                return data.get("type") == "service_account"
+        except Exception:
             return False
-            
+
     def get_credentials(self) -> Credentials:
         """Get the current credentials."""
         if not self.creds:

@@ -1,7 +1,8 @@
 """Google Docs tools for MCP server."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
+
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -20,14 +21,14 @@ class GoogleDocsTools:
         """Get or create the Google Docs service."""
         if not self.docs_service:
             creds = self.auth_manager.get_credentials()
-            self.docs_service = build('docs', 'v1', credentials=creds)
+            self.docs_service = build("docs", "v1", credentials=creds)
         return self.docs_service
 
     def _get_drive_service(self):
         """Get or create the Google Drive service."""
         if not self.drive_service:
             creds = self.auth_manager.get_credentials()
-            self.drive_service = build('drive', 'v3', credentials=creds)
+            self.drive_service = build("drive", "v3", credentials=creds)
         return self.drive_service
 
     async def create_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -44,34 +45,26 @@ class GoogleDocsTools:
             Dictionary with document information
         """
         try:
-            title = params['title']
-            content = params.get('content', '')
-            folder_id = params.get('folder_id')
-            share_with = params.get('share_with', [])
+            title = params["title"]
+            content = params.get("content", "")
+            folder_id = params.get("folder_id")
+            share_with = params.get("share_with", [])
 
             docs_service = self._get_docs_service()
             drive_service = self._get_drive_service()
 
             # Create the document
-            document = docs_service.documents().create(
-                body={'title': title}
-            ).execute()
+            document = docs_service.documents().create(body={"title": title}).execute()
 
-            document_id = document['documentId']
+            document_id = document["documentId"]
             logger.info(f"Created document with ID: {document_id}")
 
             # Add content if provided
             if content:
-                requests = [{
-                    'insertText': {
-                        'location': {'index': 1},
-                        'text': content
-                    }
-                }]
+                requests = [{"insertText": {"location": {"index": 1}, "text": content}}]
 
                 docs_service.documents().batchUpdate(
-                    documentId=document_id,
-                    body={'requests': requests}
+                    documentId=document_id, body={"requests": requests}
                 ).execute()
 
                 logger.info(f"Added content to document: {title}")
@@ -80,23 +73,26 @@ class GoogleDocsTools:
             if folder_id:
                 try:
                     # Get current parents
-                    file = drive_service.files().get(
-                        fileId=document_id,
-                        fields='parents'
-                    ).execute()
-                    previous_parents = ",".join(file.get('parents'))
+                    file = (
+                        drive_service.files()
+                        .get(fileId=document_id, fields="parents")
+                        .execute()
+                    )
+                    previous_parents = ",".join(file.get("parents"))
 
                     # Move to new folder
                     drive_service.files().update(
                         fileId=document_id,
                         addParents=folder_id,
                         removeParents=previous_parents,
-                        fields='id, parents'
+                        fields="id, parents",
                     ).execute()
 
                     logger.info(f"Moved document to folder: {folder_id}")
                 except HttpError as e:
-                    logger.warning(f"Could not move document to folder {folder_id}: {e}")
+                    logger.warning(
+                        f"Could not move document to folder {folder_id}: {e}"
+                    )
 
             # Share with users if specified
             if share_with:
@@ -105,10 +101,10 @@ class GoogleDocsTools:
                         drive_service.permissions().create(
                             fileId=document_id,
                             body={
-                                'type': 'user',
-                                'role': 'writer',
-                                'emailAddress': email
-                            }
+                                "type": "user",
+                                "role": "writer",
+                                "emailAddress": email,
+                            },
                         ).execute()
                         logger.info(f"Shared document with: {email}")
                     except HttpError as e:
@@ -118,12 +114,12 @@ class GoogleDocsTools:
             doc_url = f"https://docs.google.com/document/d/{document_id}/edit"
 
             return {
-                'documentId': document_id,
-                'title': title,
-                'url': doc_url,
-                'revisionId': document.get('revisionId'),
-                'shared_with': share_with,
-                'folder_id': folder_id
+                "documentId": document_id,
+                "title": title,
+                "url": doc_url,
+                "revisionId": document.get("revisionId"),
+                "shared_with": share_with,
+                "folder_id": folder_id,
             }
 
         except HttpError as e:
@@ -147,10 +143,10 @@ class GoogleDocsTools:
             Dictionary with update information
         """
         try:
-            document_id = params['document_id']
-            content = params['content']
-            index = params.get('index')
-            replace_all = params.get('replace_all', False)
+            document_id = params["document_id"]
+            content = params["content"]
+            index = params.get("index")
+            replace_all = params.get("replace_all", False)
 
             docs_service = self._get_docs_service()
 
@@ -161,44 +157,48 @@ class GoogleDocsTools:
                 # Replace all content
                 requests = [
                     {
-                        'deleteContentRange': {
-                            'range': {
-                                'startIndex': 1,
-                                'endIndex': len(document['body']['content'][0]['paragraph']['elements'][0]['textRun']['content'])
+                        "deleteContentRange": {
+                            "range": {
+                                "startIndex": 1,
+                                "endIndex": len(
+                                    document["body"]["content"][0]["paragraph"][
+                                        "elements"
+                                    ][0]["textRun"]["content"]
+                                ),
                             }
                         }
                     },
-                    {
-                        'insertText': {
-                            'location': {'index': 1},
-                            'text': content
-                        }
-                    }
+                    {"insertText": {"location": {"index": 1}, "text": content}},
                 ]
             else:
                 # Insert or append content
                 if index is None:
                     # Append to end (before the last newline)
-                    index = len(document['body']['content'][0]['paragraph']['elements'][0]['textRun']['content']) - 1
+                    index = (
+                        len(
+                            document["body"]["content"][0]["paragraph"]["elements"][0][
+                                "textRun"
+                            ]["content"]
+                        )
+                        - 1
+                    )
 
-                requests = [{
-                    'insertText': {
-                        'location': {'index': index},
-                        'text': content
-                    }
-                }]
+                requests = [
+                    {"insertText": {"location": {"index": index}, "text": content}}
+                ]
 
-            result = docs_service.documents().batchUpdate(
-                documentId=document_id,
-                body={'requests': requests}
-            ).execute()
+            result = (
+                docs_service.documents()
+                .batchUpdate(documentId=document_id, body={"requests": requests})
+                .execute()
+            )
 
             logger.info(f"Updated document: {document_id}")
 
             return {
-                'documentId': document_id,
-                'replies': result.get('replies', []),
-                'writeControl': result.get('writeControl', {})
+                "documentId": document_id,
+                "replies": result.get("replies", []),
+                "writeControl": result.get("writeControl", {}),
             }
 
         except HttpError as e:
