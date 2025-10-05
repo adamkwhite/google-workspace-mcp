@@ -19,11 +19,13 @@ class ScopeManager:
     def _load_config(self) -> Dict:
         """Load scope configuration from file."""
         if not self.config_path.exists():
-            logger.warning(f"Scope config not found at {self.config_path}, using defaults")
+            logger.warning(
+                f"Scope config not found at {self.config_path}, using defaults"
+            )
             return self._get_default_config()
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 config = json.load(f)
             logger.info(f"Loaded scope configuration from {self.config_path}")
             return config
@@ -38,12 +40,12 @@ class ScopeManager:
                 "calendar": True,
                 "gmail": True,
                 "docs": True,
-                "drive": True
+                "drive": True,
             },
             "scope_dependencies": {
                 "docs": ["drive"],
                 "sheets": ["drive"],
-                "slides": ["drive"]
+                "slides": ["drive"],
             },
             "scope_mappings": {
                 "calendar": "https://www.googleapis.com/auth/calendar",
@@ -51,7 +53,7 @@ class ScopeManager:
                 "docs": "https://www.googleapis.com/auth/documents",
                 "sheets": "https://www.googleapis.com/auth/spreadsheets",
                 "slides": "https://www.googleapis.com/auth/presentations",
-                "drive": "https://www.googleapis.com/auth/drive.file"
+                "drive": "https://www.googleapis.com/auth/drive.file",
             },
             "service_descriptions": {
                 "calendar": "Create, view, and manage calendar events",
@@ -59,15 +61,15 @@ class ScopeManager:
                 "docs": "Create and edit Google Documents",
                 "sheets": "Create and edit Google Spreadsheets",
                 "slides": "Create and edit Google Presentations",
-                "drive": "Access Google Drive files (required for Docs/Sheets/Slides)"
-            }
+                "drive": "Access Google Drive files (required for Docs/Sheets/Slides)",
+            },
         }
 
     def get_enabled_services(self) -> Set[str]:
         """Get set of enabled services."""
         return {
-            service for service, enabled
-            in self.config.get("enabled_services", {}).items()
+            service
+            for service, enabled in self.config.get("enabled_services", {}).items()
             if enabled
         }
 
@@ -91,7 +93,9 @@ class ScopeManager:
             else:
                 logger.warning(f"No scope mapping found for service: {service}")
 
-        logger.info(f"Required scopes for enabled services {enabled_services}: {scopes}")
+        logger.info(
+            f"Required scopes for enabled services {enabled_services}: {scopes}"
+        )
         return scopes
 
     def validate_configuration(self) -> Tuple[bool, List[str]]:
@@ -115,8 +119,13 @@ class ScopeManager:
         for service in enabled_services:
             if service in dependencies:
                 for dep in dependencies[service]:
-                    if dep not in self.config["enabled_services"] or not self.config["enabled_services"][dep]:
-                        errors.append(f"Service '{service}' requires '{dep}' to be enabled")
+                    if (
+                        dep not in self.config["enabled_services"]
+                        or not self.config["enabled_services"][dep]
+                    ):
+                        errors.append(
+                            f"Service '{service}' requires '{dep}' to be enabled"
+                        )
 
         # Check for missing scope mappings
         required_services = set(enabled_services)
@@ -155,7 +164,7 @@ class ScopeManager:
             "service_descriptions": {
                 service: self.get_service_description(service)
                 for service in enabled_services
-            }
+            },
         }
 
     def has_scope_changes(self, current_scopes: List[str]) -> bool:
@@ -181,7 +190,7 @@ class ScopeManager:
             # Ensure config directory exists
             self.config_path.parent.mkdir(exist_ok=True)
 
-            with open(self.config_path, 'w') as f:
+            with open(self.config_path, "w") as f:
                 json.dump(config_to_save, f, indent=2)
 
             logger.info(f"Configuration saved to {self.config_path}")
