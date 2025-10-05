@@ -97,6 +97,39 @@ class ScopeManager:
         )
         return scopes
 
+    def _validate_dependencies(
+        self, enabled_services: Set[str], dependencies: dict
+    ) -> List[str]:
+        """Validate service dependencies are met."""
+        errors = []
+        for service in enabled_services:
+            if service in dependencies:
+                for dep in dependencies[service]:
+                    if (
+                        dep not in self.config["enabled_services"]
+                        or not self.config["enabled_services"][dep]
+                    ):
+                        errors.append(
+                            f"Service '{service}' requires '{dep}' to be enabled"
+                        )
+        return errors
+
+    def _validate_scope_mappings(
+        self, enabled_services: Set[str], dependencies: dict, scope_mappings: dict
+    ) -> List[str]:
+        """Validate all required services have scope mappings."""
+        errors = []
+        required_services = set(enabled_services)
+        for service in enabled_services:
+            if service in dependencies:
+                required_services.update(dependencies[service])
+
+        for service in required_services:
+            if service not in scope_mappings:
+                errors.append(f"Missing scope mapping for service: {service}")
+
+        return errors
+
     def validate_configuration(self) -> Tuple[bool, List[str]]:
         """Validate the current configuration."""
         errors = []
@@ -114,27 +147,13 @@ class ScopeManager:
         dependencies = self.config.get("scope_dependencies", {})
         scope_mappings = self.config.get("scope_mappings", {})
 
-        # Check for missing dependencies
-        for service in enabled_services:
-            if service in dependencies:
-                for dep in dependencies[service]:
-                    if (
-                        dep not in self.config["enabled_services"]
-                        or not self.config["enabled_services"][dep]
-                    ):
-                        errors.append(
-                            f"Service '{service}' requires '{dep}' to be enabled"
-                        )
-
-        # Check for missing scope mappings
-        required_services = set(enabled_services)
-        for service in enabled_services:
-            if service in dependencies:
-                required_services.update(dependencies[service])
-
-        for service in required_services:
-            if service not in scope_mappings:
-                errors.append(f"Missing scope mapping for service: {service}")
+        # Validate dependencies and scope mappings
+        errors.extend(self._validate_dependencies(enabled_services, dependencies))
+        errors.extend(
+            self._validate_scope_mappings(
+                enabled_services, dependencies, scope_mappings
+            )
+        )
 
         return len(errors) == 0, errors
 

@@ -276,7 +276,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error deleting event: {e}")
             raise
 
-    async def list_calendars(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def list_calendars(self) -> Dict[str, Any]:
         """List all available calendars.
 
         Returns:
