@@ -35,7 +35,7 @@ jobs:
 
       - name: Check import sorting (isort)
         run: |
-          isort --check-only src/ tests/ || (echo "❌ Import sorting issues found. Run 'isort src/ tests/' to fix." && exit 1)
+          isort --profile black --check-only src/ tests/ || (echo "❌ Import sorting issues found. Run 'isort --profile black src/ tests/' to fix." && exit 1)
 
       - name: Lint code (Flake8)
         run: |
