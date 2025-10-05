@@ -12,14 +12,49 @@ permissions:
   pull-requests: write
 
 jobs:
-  build:
-    name: Build and analyze
+  # Stage 1: Quick validation checks (30-60 seconds)
+  quick-checks:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tools
+        run: |
+          pip install flake8 mypy black isort
+
+      - name: Check code formatting (Black)
+        run: |
+          black --check src/ tests/ || (echo "❌ Code formatting issues found. Run 'black src/ tests/' to fix." && exit 1)
+
+      - name: Check import sorting (isort)
+        run: |
+          isort --check-only src/ tests/ || (echo "❌ Import sorting issues found. Run 'isort src/ tests/' to fix." && exit 1)
+
+      - name: Lint code (Flake8)
+        run: |
+          flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+
+      - name: Type checking (Mypy)
+        run: |
+          mypy src --ignore-missing-imports
+
+  # Stage 2: Tests and SonarQube analysis (2-3 minutes)
+  sonarqube:
+    name: Tests & SonarQube Analysis
+    needs: quick-checks  # Only run if quick checks pass
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Full history for SonarQube
 
       - name: Set up Python
         uses: actions/setup-python@v4
