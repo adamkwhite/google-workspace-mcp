@@ -57,9 +57,7 @@ class GmailTools:
 
         if "bcc" in params:
             bcc_addresses = (
-                params["bcc"]
-                if isinstance(params["bcc"], list)
-                else [params["bcc"]]
+                params["bcc"] if isinstance(params["bcc"], list) else [params["bcc"]]
             )
             message["bcc"] = ", ".join(bcc_addresses)
 
