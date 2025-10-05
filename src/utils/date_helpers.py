@@ -5,15 +5,16 @@ for enhancing calendar event responses with computed day-of-week and date inform
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Any, Dict, Optional
 from zoneinfo import ZoneInfo
-from typing import Optional, Dict, Any, Tuple
-import re
 
 logger = logging.getLogger(__name__)
 
 
-def parse_calendar_datetime(datetime_str: str, timezone_str: Optional[str] = None) -> Optional[datetime]:
+def parse_calendar_datetime(
+    datetime_str: str, timezone_str: Optional[str] = None
+) -> Optional[datetime]:
     """Parse ISO datetime string with timezone information.
 
     Args:
@@ -31,11 +32,15 @@ def parse_calendar_datetime(datetime_str: str, timezone_str: Optional[str] = Non
 
     try:
         # Handle ISO format with timezone offset (e.g., '2025-09-27T12:30:00-04:00')
-        if datetime_str.endswith('Z'):
+        if datetime_str.endswith("Z"):
             # UTC timezone
             dt = datetime.fromisoformat(datetime_str[:-1])
-            dt = dt.replace(tzinfo=ZoneInfo('UTC'))
-        elif '+' in datetime_str[-6:] or datetime_str[-6:-3] == '-' and datetime_str[-3] == ':':
+            dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+        elif (
+            "+" in datetime_str[-6:]
+            or datetime_str[-6:-3] == "-"
+            and datetime_str[-3] == ":"
+        ):
             # Has timezone offset
             dt = datetime.fromisoformat(datetime_str)
         else:
@@ -44,12 +49,14 @@ def parse_calendar_datetime(datetime_str: str, timezone_str: Optional[str] = Non
             if timezone_str:
                 dt = dt.replace(tzinfo=ZoneInfo(timezone_str))
             else:
-                dt = dt.replace(tzinfo=ZoneInfo('UTC'))
+                dt = dt.replace(tzinfo=ZoneInfo("UTC"))
 
         return dt
 
     except (ValueError, KeyError) as e:
-        logger.error(f"Failed to parse datetime '{datetime_str}' with timezone '{timezone_str}': {e}")
+        logger.error(
+            f"Failed to parse datetime '{datetime_str}' with timezone '{timezone_str}': {e}"
+        )
         raise ValueError(f"Invalid datetime format: {datetime_str}")
 
 
@@ -72,7 +79,7 @@ def get_day_of_week(dt: datetime) -> str:
         raise ValueError("datetime object must be timezone-aware")
 
     try:
-        return dt.strftime('%A')
+        return dt.strftime("%A")
     except Exception as e:
         logger.error(f"Failed to get day of week for {dt}: {e}")
         raise ValueError(f"Failed to format day of week: {e}")
@@ -97,7 +104,7 @@ def get_date_string(dt: datetime) -> str:
         raise ValueError("datetime object must be timezone-aware")
 
     try:
-        return dt.strftime('%Y-%m-%d')
+        return dt.strftime("%Y-%m-%d")
     except Exception as e:
         logger.error(f"Failed to get date string for {dt}: {e}")
         raise ValueError(f"Failed to format date string: {e}")
@@ -150,7 +157,9 @@ def calculate_duration(start_dt: datetime, end_dt: datetime) -> str:
         return " ".join(parts)
 
     except Exception as e:
-        logger.error(f"Failed to calculate duration between {start_dt} and {end_dt}: {e}")
+        logger.error(
+            f"Failed to calculate duration between {start_dt} and {end_dt}: {e}"
+        )
         raise ValueError(f"Failed to calculate duration: {e}")
 
 
@@ -204,19 +213,19 @@ def add_computed_fields(event: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(event, dict):
         raise ValueError("event must be a dictionary")
 
-    if 'start' not in event or 'end' not in event:
+    if "start" not in event or "end" not in event:
         raise ValueError("event must have 'start' and 'end' fields")
 
     try:
         # Extract start datetime info
-        start_info = event['start']
-        start_datetime_str = start_info.get('dateTime')
-        start_timezone = start_info.get('timeZone')
+        start_info = event["start"]
+        start_datetime_str = start_info.get("dateTime")
+        start_timezone = start_info.get("timeZone")
 
         # Extract end datetime info
-        end_info = event['end']
-        end_datetime_str = end_info.get('dateTime')
-        end_timezone = end_info.get('timeZone')
+        end_info = event["end"]
+        end_datetime_str = end_info.get("dateTime")
+        end_timezone = end_info.get("timeZone")
 
         if not start_datetime_str or not end_datetime_str:
             raise ValueError("start and end must have 'dateTime' fields")
@@ -225,22 +234,28 @@ def add_computed_fields(event: Dict[str, Any]) -> Dict[str, Any]:
         start_dt = parse_calendar_datetime(start_datetime_str, start_timezone)
         end_dt = parse_calendar_datetime(end_datetime_str, end_timezone)
 
+        # Verify datetime parsing succeeded
+        if start_dt is None or end_dt is None:
+            raise ValueError("Failed to parse start or end datetime")
+
         # Calculate computed fields
         computed = {
-            'startDay': get_day_of_week(start_dt),
-            'endDay': get_day_of_week(end_dt),
-            'startDate': get_date_string(start_dt),
-            'endDate': get_date_string(end_dt),
-            'duration': calculate_duration(start_dt, end_dt),
-            'spansMultipleDays': spans_multiple_days(start_dt, end_dt)
+            "startDay": get_day_of_week(start_dt),
+            "endDay": get_day_of_week(end_dt),
+            "startDate": get_date_string(start_dt),
+            "endDate": get_date_string(end_dt),
+            "duration": calculate_duration(start_dt, end_dt),
+            "spansMultipleDays": spans_multiple_days(start_dt, end_dt),
         }
 
         # Add computed fields to event (create copy to avoid mutation)
         enhanced_event = event.copy()
-        enhanced_event['computed'] = computed
+        enhanced_event["computed"] = computed
 
         return enhanced_event
 
     except Exception as e:
-        logger.error(f"Failed to add computed fields to event {event.get('id', 'unknown')}: {e}")
+        logger.error(
+            f"Failed to add computed fields to event {event.get('id', 'unknown')}: {e}"
+        )
         raise ValueError(f"Failed to add computed fields: {e}")
