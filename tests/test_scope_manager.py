@@ -1,14 +1,10 @@
 """Tests for scope manager."""
 
 import json
-import os
-import sys
 import tempfile
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.utils.scope_manager import ScopeManager  # noqa: E402
+from utils.scope_manager import ScopeManager
 
 
 class TestScopeManager:

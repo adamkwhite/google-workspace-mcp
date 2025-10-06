@@ -1,14 +1,10 @@
 """Tests for Gmail tools."""
 
-import os
-import sys
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.tools.gmail import GmailTools  # noqa: E402
+from tools.gmail import GmailTools
 
 
 @pytest.fixture
@@ -29,7 +25,7 @@ class TestGmailTools:
     """Test cases for Gmail tools."""
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_send_email_basic(self, mock_build, gmail_tools):
         """Test sending a basic email."""
         # Setup mocks
@@ -59,7 +55,7 @@ class TestGmailTools:
         assert result["threadId"] == "thread-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_send_email_with_cc_bcc(self, mock_build, gmail_tools):
         """Test sending email with CC and BCC."""
         mock_service = MagicMock()
@@ -80,7 +76,7 @@ class TestGmailTools:
         assert result["id"] == "msg-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_send_email_html(self, mock_build, gmail_tools):
         """Test sending HTML email."""
         mock_service = MagicMock()
@@ -100,7 +96,7 @@ class TestGmailTools:
         assert result["id"] == "msg-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_search_emails_basic(self, mock_build, gmail_tools):
         """Test searching emails."""
         mock_service = MagicMock()
@@ -138,7 +134,7 @@ class TestGmailTools:
         assert len(result["messages"]) == 2
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_search_emails_with_body(self, mock_build, gmail_tools):
         """Test searching emails with body included."""
         mock_service = MagicMock()
@@ -168,7 +164,7 @@ class TestGmailTools:
         assert len(result["messages"]) == 1
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_create_draft_basic(self, mock_build, gmail_tools):
         """Test creating email draft."""
         mock_service = MagicMock()
@@ -194,7 +190,7 @@ class TestGmailTools:
         assert result["message"]["id"] == "msg-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_create_draft_with_cc_bcc(self, mock_build, gmail_tools):
         """Test creating draft with CC and BCC."""
         mock_service = MagicMock()
@@ -217,7 +213,7 @@ class TestGmailTools:
         assert result["id"] == "draft-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_send_email_error_handling(self, mock_build, gmail_tools):
         """Test error handling when sending email."""
         from googleapiclient.errors import HttpError
@@ -240,7 +236,7 @@ class TestGmailTools:
             await gmail_tools.send_email(params)
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_search_emails_error_handling(self, mock_build, gmail_tools):
         """Test error handling when searching emails."""
         from googleapiclient.errors import HttpError
@@ -259,7 +255,7 @@ class TestGmailTools:
             await gmail_tools.search_emails(params)
 
     @pytest.mark.asyncio
-    @patch("src.tools.gmail.build")
+    @patch("tools.gmail.build")
     async def test_create_draft_error_handling(self, mock_build, gmail_tools):
         """Test error handling when creating draft."""
         from googleapiclient.errors import HttpError
