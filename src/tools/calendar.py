@@ -1,9 +1,13 @@
 """Google Calendar tools for MCP server."""
 
+import html
 import logging
 import os
+import re
 import sys
+from datetime import datetime
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -30,6 +34,148 @@ class GoogleCalendarTools:
             creds = self.auth_manager.get_credentials()
             self.service = build("calendar", "v3", credentials=creds)
         return self.service
+
+    def _validate_text_field(self, value: Any, field_name: str, max_length: int) -> str:
+        """Validate and sanitize a text field.
+
+        IMPORTANT: Input must be raw, unescaped text. Do not pass pre-escaped HTML
+        as it will be double-escaped. The function handles all necessary escaping.
+
+        Args:
+            value: Field value to validate (must be raw, unescaped text)
+            field_name: Name of the field (for error messages)
+            max_length: Maximum allowed length
+
+        Returns:
+            Sanitized text value with HTML entities escaped
+
+        Raises:
+            ValueError: If validation fails
+        """
+        if not isinstance(value, str):
+            raise ValueError(f"{field_name} must be a string")
+
+        text = value.strip()
+        if not text:
+            raise ValueError(f"{field_name} cannot be empty")
+
+        if len(text) > max_length:
+            raise ValueError(f"{field_name} must be {max_length} characters or less")
+
+        return html.escape(text)
+
+    def _validate_url_field(self, value: Any) -> str:
+        """Validate chat_url field.
+
+        NOTE: URL validation is restricted to claude.ai domain for security.
+        Only HTTPS URLs from *.claude.ai are permitted to prevent phishing
+        and unauthorized data exfiltration.
+
+        Args:
+            value: URL value to validate
+
+        Returns:
+            Validated URL string
+
+        Raises:
+            ValueError: If validation fails
+        """
+        if not isinstance(value, str):
+            raise ValueError("chat_url must be a string")
+
+        url = value.strip()
+        if not url:
+            raise ValueError("chat_url cannot be empty")
+
+        # Parse and validate URL (urlparse doesn't raise for most inputs)
+        parsed = urlparse(url)
+
+        # Enforce HTTPS
+        if parsed.scheme != "https":
+            raise ValueError("chat_url must use HTTPS protocol")
+
+        # Whitelist allowed domains (claude.ai and subdomains)
+        allowed_pattern = r"^(.*\.)?claude\.ai$"
+        if not re.match(allowed_pattern, parsed.netloc):
+            raise ValueError("chat_url must be from claude.ai domain")
+
+        return url
+
+    def _validate_date_field(self, value: Any) -> str:
+        """Validate created_date field.
+
+        Args:
+            value: Date value to validate
+
+        Returns:
+            Validated date string
+
+        Raises:
+            ValueError: If validation fails
+        """
+        if not isinstance(value, str):
+            raise ValueError("created_date must be a string")
+
+        date_str = value.strip()
+        if not date_str:
+            raise ValueError("created_date cannot be empty")
+
+        # Validate ISO date format
+        try:
+            datetime.fromisoformat(date_str)
+        except ValueError as e:
+            raise ValueError(f"created_date must be in ISO format (YYYY-MM-DD): {e}")
+
+        # Enforce YYYY-MM-DD format (no time component)
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+            raise ValueError("created_date must be in YYYY-MM-DD format")
+
+        return date_str
+
+    def _validate_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and sanitize metadata fields.
+
+        CRITICAL: All metadata input must be raw, unescaped text to prevent
+        double-escaping on updates. This method applies HTML escaping and
+        should be called every time metadata is provided, including updates.
+
+        Args:
+            metadata: Dictionary with optional fields: chat_title, chat_url,
+                     project_name, created_date (all must be raw, unescaped)
+
+        Returns:
+            Validated and sanitized metadata dictionary
+
+        Raises:
+            ValueError: If any field fails validation
+        """
+        if not metadata:
+            return {}
+
+        if not isinstance(metadata, dict):
+            raise ValueError("metadata must be a dictionary")
+
+        validated = {}
+
+        if "chat_title" in metadata:
+            validated["chat_title"] = self._validate_text_field(
+                metadata["chat_title"], "chat_title", 200
+            )
+
+        if "chat_url" in metadata:
+            validated["chat_url"] = self._validate_url_field(metadata["chat_url"])
+
+        if "project_name" in metadata:
+            validated["project_name"] = self._validate_text_field(
+                metadata["project_name"], "project_name", 100
+            )
+
+        if "created_date" in metadata:
+            validated["created_date"] = self._validate_date_field(
+                metadata["created_date"]
+            )
+
+        return validated
 
     def _format_metadata(self, metadata: Dict[str, Any]) -> str:
         """Format metadata into a description section.
@@ -91,9 +237,10 @@ class GoogleCalendarTools:
             # Add optional fields
             description = params.get("description", "")
 
-            # Append metadata to description if provided
+            # Validate and append metadata to description if provided
             if "metadata" in params and params["metadata"]:
-                description += self._format_metadata(params["metadata"])
+                validated_metadata = self._validate_metadata(params["metadata"])
+                description += self._format_metadata(validated_metadata)
 
             if description:
                 event_data["description"] = description
@@ -192,6 +339,15 @@ class GoogleCalendarTools:
 
             if "description" in params:
                 event["description"] = params["description"]
+
+            # Validate and append metadata to description if provided
+            if "metadata" in params and params["metadata"]:
+                validated_metadata = self._validate_metadata(params["metadata"])
+                # Get existing description or empty string
+                description = event.get("description", "")
+                # Append validated metadata
+                description += self._format_metadata(validated_metadata)
+                event["description"] = description
 
             if "location" in params:
                 event["location"] = params["location"]
