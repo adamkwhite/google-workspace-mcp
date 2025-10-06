@@ -247,6 +247,34 @@ class TestMetadataValidation:
         result = self.calendar_tools._validate_metadata({"created_date": "2024-02-29"})
         assert result["created_date"] == "2024-02-29"
 
+    def test_validate_created_date_day_zero_raises_error(self):
+        """Test day 0 raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-01-00"})
+
+    def test_validate_created_date_month_zero_raises_error(self):
+        """Test month 0 raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-00-15"})
+
+    def test_validate_created_date_negative_day_raises_error(self):
+        """Test negative day raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-01--05"})
+
+    def test_validate_created_date_negative_month_raises_error(self):
+        """Test negative month raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025--01-15"})
+
     def test_validate_created_date_empty_string_raises_error(self):
         """Test empty created_date raises ValueError."""
         with pytest.raises(ValueError, match="created_date cannot be empty"):
