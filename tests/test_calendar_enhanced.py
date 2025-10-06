@@ -1,15 +1,10 @@
 """Integration tests for enhanced calendar functionality with computed fields."""
 
-import os
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from tools.calendar import GoogleCalendarTools  # noqa: E402
+from tools.calendar import GoogleCalendarTools
 
 
 class TestEnhancedCalendar:

@@ -1,16 +1,11 @@
 """Unit tests for date_helpers module."""
 
-import os
-import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from utils.date_helpers import (  # noqa: E402
+from utils.date_helpers import (
     add_computed_fields,
     calculate_duration,
     get_date_string,
