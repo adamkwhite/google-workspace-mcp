@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 # Default timezone constant
 DEFAULT_TIMEZONE = "America/Toronto"
 
+# Metadata field length limits
+MAX_CHAT_TITLE_LENGTH = 200
+MAX_PROJECT_NAME_LENGTH = 100
+
 
 class GoogleCalendarTools:
     """Handles Google Calendar operations."""
@@ -156,7 +160,7 @@ class GoogleCalendarTools:
 
         if "chat_title" in metadata:
             validated["chat_title"] = self._validate_text_field(
-                metadata["chat_title"], "chat_title", 200
+                metadata["chat_title"], "chat_title", MAX_CHAT_TITLE_LENGTH
             )
 
         if "chat_url" in metadata:
@@ -164,7 +168,7 @@ class GoogleCalendarTools:
 
         if "project_name" in metadata:
             validated["project_name"] = self._validate_text_field(
-                metadata["project_name"], "project_name", 100
+                metadata["project_name"], "project_name", MAX_PROJECT_NAME_LENGTH
             )
 
         if "created_date" in metadata:
