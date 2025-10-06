@@ -1,6 +1,6 @@
 """Unit tests for metadata validation in calendar tools."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -260,3 +260,169 @@ class TestMetadataValidation:
         result = self.calendar_tools._validate_metadata(metadata)
         assert result["chat_title"] == "Meeting"
         assert "unknown_field" not in result
+
+
+class TestUpdateEventValidation:
+    """Test cases for update_event metadata validation."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_auth_manager = Mock()
+        self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_with_valid_metadata(self, mock_build):
+        """Test update_event validates metadata correctly."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Mock the get() call to return existing event
+        existing_event = {
+            "id": "event-123",
+            "summary": "Old Title",
+            "description": "Old description",
+            "start": {"dateTime": "2025-09-28T10:00:00", "timeZone": "America/Toronto"},
+            "end": {"dateTime": "2025-09-28T11:00:00", "timeZone": "America/Toronto"},
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        # Mock the update() call
+        updated_event = existing_event.copy()
+        updated_event["description"] = (
+            "Old description\n\n---\n📋 Context:\nCreated: 2025-09-28\nProject: Q4 Planning\nChat: Team Meeting\nURL: https://claude.ai/chat/abc123\n"
+        )
+        mock_service.events().update().execute.return_value = updated_event
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "created_date": "2025-09-28",
+                "project_name": "Q4 Planning",
+                "chat_title": "Team Meeting",
+                "chat_url": "https://claude.ai/chat/abc123",
+            },
+        }
+
+        result = await self.calendar_tools.update_event(params)
+
+        # Verify metadata was validated and added
+        update_call = mock_service.events().update.call_args
+        assert "📋 Context:" in update_call.kwargs["body"]["description"]
+        assert "Created: 2025-09-28" in update_call.kwargs["body"]["description"]
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_rejects_xss_in_metadata(self, mock_build):
+        """Test update_event prevents XSS attacks in metadata."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "chat_title": "<script>alert('xss')</script>",
+            },
+        }
+
+        # Should not raise - but XSS should be escaped
+        result = await self.calendar_tools.update_event(params)
+
+        # Verify XSS was escaped
+        update_call = mock_service.events().update.call_args
+        description = update_call.kwargs["body"]["description"]
+        assert "&lt;script&gt;" in description
+        assert "<script>" not in description
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_rejects_malicious_url(self, mock_build):
+        """Test update_event prevents malicious URLs in metadata."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "chat_url": "https://evil.com/phishing",
+            },
+        }
+
+        # Should raise ValueError for malicious URL
+        with pytest.raises(ValueError, match="chat_url must be from claude.ai domain"):
+            await self.calendar_tools.update_event(params)
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_rejects_http_url(self, mock_build):
+        """Test update_event enforces HTTPS for URLs."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "chat_url": "http://claude.ai/chat/abc",
+            },
+        }
+
+        # Should raise ValueError for HTTP URL
+        with pytest.raises(ValueError, match="chat_url must use HTTPS protocol"):
+            await self.calendar_tools.update_event(params)
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_with_invalid_date(self, mock_build):
+        """Test update_event validates date format."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "created_date": "09/28/2025",  # Invalid format
+            },
+        }
+
+        # Should raise ValueError for invalid date format
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            await self.calendar_tools.update_event(params)
