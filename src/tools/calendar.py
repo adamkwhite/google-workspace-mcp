@@ -340,12 +340,18 @@ class GoogleCalendarTools:
             if "description" in params:
                 event["description"] = params["description"]
 
-            # Validate and append metadata to description if provided
+            # Validate and replace metadata in description if provided
             if "metadata" in params and params["metadata"]:
                 validated_metadata = self._validate_metadata(params["metadata"])
                 # Get existing description or empty string
                 description = event.get("description", "")
-                # Append validated metadata
+
+                # Remove existing metadata section if present to prevent double-escaping
+                metadata_marker = "\n\n---\n📋 Context:\n"
+                if metadata_marker in description:
+                    description = description.split(metadata_marker)[0]
+
+                # Append new validated metadata
                 description += self._format_metadata(validated_metadata)
                 event["description"] = description
 
