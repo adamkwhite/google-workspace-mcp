@@ -428,3 +428,114 @@ class TestUpdateEventValidation:
             ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
         ):
             await self.calendar_tools.update_event(params)
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_repeated_updates_no_double_escaping(self, mock_build):
+        """Test that repeated metadata updates don't cause double-escaping."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Initial event
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+            "description": "Original description",
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        # First update with metadata containing special chars
+        params_first = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "chat_title": "Q&A Session",
+            },
+        }
+
+        # Mock first update response
+        first_updated = existing_event.copy()
+        first_updated["description"] = (
+            "Original description\n\n---\n📋 Context:\nChat: Q&amp;A Session\n"
+        )
+        mock_service.events().update().execute.return_value = first_updated
+
+        await self.calendar_tools.update_event(params_first)
+
+        # Second update - simulate getting the already-updated event
+        mock_service.events().get().execute.return_value = first_updated
+
+        # Second update with same metadata
+        params_second = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "chat_title": "Q&A Session",  # Raw input again
+            },
+        }
+
+        await self.calendar_tools.update_event(params_second)
+
+        # Verify second update call
+        second_update_call = mock_service.events().update.call_args_list[1]
+        description = second_update_call.kwargs["body"]["description"]
+
+        # Should have Q&amp;A only once, not Q&amp;amp;A
+        assert description.count("Q&amp;A") == 1
+        assert "Q&amp;amp;A" not in description
+        # Original description should still be present
+        assert "Original description" in description
+
+    @patch("tools.calendar.build")
+    @pytest.mark.asyncio
+    async def test_update_event_replaces_old_metadata(self, mock_build):
+        """Test that updating metadata replaces old metadata section."""
+        mock_service = Mock()
+        mock_build.return_value = mock_service
+
+        # Event with existing metadata
+        existing_event = {
+            "id": "event-123",
+            "summary": "Event",
+            "start": {"dateTime": "2025-09-28T10:00:00"},
+            "end": {"dateTime": "2025-09-28T11:00:00"},
+            "description": (
+                "User notes here\n\n---\n📋 Context:\n"
+                "Created: 2025-09-01\n"
+                "Project: Old Project\n"
+                "Chat: Old Chat\n"
+            ),
+        }
+        mock_service.events().get().execute.return_value = existing_event
+
+        # Update with completely different metadata
+        params = {
+            "calendar_id": "primary",
+            "event_id": "event-123",
+            "metadata": {
+                "created_date": "2025-09-28",
+                "project_name": "New Project",
+                "chat_title": "New Chat",
+                "chat_url": "https://claude.ai/chat/new123",
+            },
+        }
+
+        await self.calendar_tools.update_event(params)
+
+        # Verify update call
+        update_call = mock_service.events().update.call_args
+        description = update_call.kwargs["body"]["description"]
+
+        # User notes should be preserved
+        assert "User notes here" in description
+        # Old metadata should be gone
+        assert "Old Project" not in description
+        assert "Old Chat" not in description
+        assert "2025-09-01" not in description
+        # New metadata should be present
+        assert "New Project" in description
+        assert "New Chat" in description
+        assert "2025-09-28" in description
+        assert "https://claude.ai/chat/new123" in description
