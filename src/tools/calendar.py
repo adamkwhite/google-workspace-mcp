@@ -38,13 +38,16 @@ class GoogleCalendarTools:
     def _validate_text_field(self, value: Any, field_name: str, max_length: int) -> str:
         """Validate and sanitize a text field.
 
+        IMPORTANT: Input must be raw, unescaped text. Do not pass pre-escaped HTML
+        as it will be double-escaped. The function handles all necessary escaping.
+
         Args:
-            value: Field value to validate
+            value: Field value to validate (must be raw, unescaped text)
             field_name: Name of the field (for error messages)
             max_length: Maximum allowed length
 
         Returns:
-            Sanitized text value
+            Sanitized text value with HTML entities escaped
 
         Raises:
             ValueError: If validation fails
@@ -64,6 +67,10 @@ class GoogleCalendarTools:
     def _validate_url_field(self, value: Any) -> str:
         """Validate chat_url field.
 
+        NOTE: URL validation is restricted to claude.ai domain for security.
+        Only HTTPS URLs from *.claude.ai are permitted to prevent phishing
+        and unauthorized data exfiltration.
+
         Args:
             value: URL value to validate
 
@@ -80,11 +87,8 @@ class GoogleCalendarTools:
         if not url:
             raise ValueError("chat_url cannot be empty")
 
-        # Parse and validate URL
-        try:
-            parsed = urlparse(url)
-        except Exception as e:
-            raise ValueError(f"chat_url is not a valid URL: {e}")
+        # Parse and validate URL (urlparse doesn't raise for most inputs)
+        parsed = urlparse(url)
 
         # Enforce HTTPS
         if parsed.scheme != "https":
@@ -131,9 +135,13 @@ class GoogleCalendarTools:
     def _validate_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """Validate and sanitize metadata fields.
 
+        CRITICAL: All metadata input must be raw, unescaped text to prevent
+        double-escaping on updates. This method applies HTML escaping and
+        should be called every time metadata is provided, including updates.
+
         Args:
             metadata: Dictionary with optional fields: chat_title, chat_url,
-                     project_name, created_date
+                     project_name, created_date (all must be raw, unescaped)
 
         Returns:
             Validated and sanitized metadata dictionary
@@ -331,6 +339,15 @@ class GoogleCalendarTools:
 
             if "description" in params:
                 event["description"] = params["description"]
+
+            # Validate and append metadata to description if provided
+            if "metadata" in params and params["metadata"]:
+                validated_metadata = self._validate_metadata(params["metadata"])
+                # Get existing description or empty string
+                description = event.get("description", "")
+                # Append validated metadata
+                description += self._format_metadata(validated_metadata)
+                event["description"] = description
 
             if "location" in params:
                 event["location"] = params["location"]
