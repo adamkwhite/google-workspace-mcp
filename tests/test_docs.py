@@ -1,14 +1,10 @@
 """Tests for Google Docs tools."""
 
-import os
-import sys
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.tools.docs import GoogleDocsTools  # noqa: E402
+from tools.docs import GoogleDocsTools
 
 
 @pytest.fixture
@@ -29,7 +25,7 @@ class TestGoogleDocsTools:
     """Test cases for Google Docs tools."""
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_create_document_basic(self, mock_build, docs_tools):
         """Test creating a basic document."""
         # Setup mocks
@@ -58,7 +54,7 @@ class TestGoogleDocsTools:
         assert result["revisionId"] == "rev-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_create_document_with_content(self, mock_build, docs_tools):
         """Test creating a document with initial content."""
         # Setup mocks
@@ -86,7 +82,7 @@ class TestGoogleDocsTools:
         assert result["title"] == "Test Document"
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_create_document_with_folder(self, mock_build, docs_tools):
         """Test creating a document in a specific folder."""
         # Setup mocks
@@ -117,7 +113,7 @@ class TestGoogleDocsTools:
         assert result["folder_id"] == "folder-123"
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_create_document_with_sharing(self, mock_build, docs_tools):
         """Test creating a document and sharing it."""
         # Setup mocks
@@ -157,7 +153,7 @@ class TestGoogleDocsTools:
         assert result["shared_with"] == ["user1@example.com", "user2@example.com"]
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_update_document_append(self, mock_build, docs_tools):
         """Test updating a document by appending content."""
         mock_docs_service = MagicMock()
@@ -195,7 +191,7 @@ class TestGoogleDocsTools:
         assert "replies" in result
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_update_document_at_index(self, mock_build, docs_tools):
         """Test updating a document at specific index."""
         mock_docs_service = MagicMock()
@@ -227,7 +223,7 @@ class TestGoogleDocsTools:
         assert result["documentId"] == "doc-456"
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_update_document_replace_all(self, mock_build, docs_tools):
         """Test replacing all document content."""
         mock_docs_service = MagicMock()
@@ -264,7 +260,7 @@ class TestGoogleDocsTools:
         assert "replies" in result
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_create_document_error_handling(self, mock_build, docs_tools):
         """Test error handling when creating document."""
         from googleapiclient.errors import HttpError
@@ -283,7 +279,7 @@ class TestGoogleDocsTools:
             await docs_tools.create_document(params)
 
     @pytest.mark.asyncio
-    @patch("src.tools.docs.build")
+    @patch("tools.docs.build")
     async def test_update_document_error_handling(self, mock_build, docs_tools):
         """Test error handling when updating document."""
         from googleapiclient.errors import HttpError

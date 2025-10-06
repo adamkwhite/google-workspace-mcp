@@ -2,16 +2,13 @@
 
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.auth.google_auth import GoogleAuthManager  # noqa: E402
+from auth.google_auth import GoogleAuthManager
 
 
 class TestGoogleAuthManager:
@@ -97,7 +94,7 @@ class TestGoogleAuthManager:
         result = manager.get_credentials()
         assert result == mock_creds
 
-    @patch("src.auth.google_auth.ScopeManager")
+    @patch("auth.google_auth.ScopeManager")
     def test_get_scope_manager(self, mock_scope_manager_class):
         """Test get_scope_manager returns scope manager instance."""
         mock_instance = Mock()
@@ -108,7 +105,7 @@ class TestGoogleAuthManager:
 
         assert result == manager.scope_manager
 
-    @patch("src.auth.google_auth.ScopeManager")
+    @patch("auth.google_auth.ScopeManager")
     def test_get_enabled_services(self, mock_scope_manager_class):
         """Test get_enabled_services delegates to scope manager."""
         mock_scope_manager = Mock()
@@ -151,7 +148,7 @@ class TestGoogleAuthManager:
 
             assert result is False
 
-    @patch("src.auth.google_auth.ScopeManager")
+    @patch("auth.google_auth.ScopeManager")
     def test_scope_manager_initialized_once(self, mock_scope_manager_class):
         """Test that scope manager is only initialized once."""
         mock_instance = Mock()
