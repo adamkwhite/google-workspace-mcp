@@ -182,8 +182,17 @@ class GoogleCalendarTools:
                      chat_title, chat_url
 
         Returns:
-            Formatted metadata string to append to description
+            Formatted metadata string to append to description, or empty string if no content
         """
+        # Check if any metadata fields have actual values
+        has_content = any(
+            metadata.get(key)
+            for key in ["created_date", "project_name", "chat_title", "chat_url"]
+        )
+
+        if not has_content:
+            return ""
+
         metadata_section = "\n\n---\n📋 Context:\n"
 
         if metadata.get("created_date"):
