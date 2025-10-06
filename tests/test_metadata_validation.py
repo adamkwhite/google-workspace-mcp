@@ -1,0 +1,262 @@
+"""Unit tests for metadata validation in calendar tools."""
+
+from unittest.mock import Mock
+
+import pytest
+
+from tools.calendar import GoogleCalendarTools
+
+
+class TestMetadataValidation:
+    """Test cases for _validate_metadata method."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_auth_manager = Mock()
+        self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
+
+    def test_validate_empty_metadata_returns_empty_dict(self):
+        """Test that empty metadata returns empty dict."""
+        result = self.calendar_tools._validate_metadata({})
+        assert result == {}
+
+    def test_validate_none_metadata_returns_empty_dict(self):
+        """Test that None metadata returns empty dict."""
+        result = self.calendar_tools._validate_metadata(None)
+        assert result == {}
+
+    def test_validate_metadata_not_dict_raises_error(self):
+        """Test that non-dict metadata raises ValueError."""
+        with pytest.raises(ValueError, match="metadata must be a dictionary"):
+            self.calendar_tools._validate_metadata("not a dict")
+
+    # chat_title validation tests
+    def test_validate_chat_title_valid(self):
+        """Test valid chat_title passes validation."""
+        metadata = {"chat_title": "Team Planning Meeting"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Team Planning Meeting"
+
+    def test_validate_chat_title_with_html_escapes(self):
+        """Test chat_title with HTML is escaped."""
+        metadata = {"chat_title": "<script>alert('xss')</script>"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert (
+            result["chat_title"]
+            == "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
+        )
+
+    def test_validate_chat_title_with_special_chars_escapes(self):
+        """Test chat_title with special characters is escaped."""
+        metadata = {"chat_title": "Q&A Session: What's Next?"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Q&amp;A Session: What&#x27;s Next?"
+
+    def test_validate_chat_title_strips_whitespace(self):
+        """Test chat_title strips leading/trailing whitespace."""
+        metadata = {"chat_title": "  Meeting  "}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Meeting"
+
+    def test_validate_chat_title_empty_string_raises_error(self):
+        """Test empty chat_title raises ValueError."""
+        with pytest.raises(ValueError, match="chat_title cannot be empty"):
+            self.calendar_tools._validate_metadata({"chat_title": ""})
+
+    def test_validate_chat_title_whitespace_only_raises_error(self):
+        """Test whitespace-only chat_title raises ValueError."""
+        with pytest.raises(ValueError, match="chat_title cannot be empty"):
+            self.calendar_tools._validate_metadata({"chat_title": "   "})
+
+    def test_validate_chat_title_too_long_raises_error(self):
+        """Test chat_title over 200 chars raises ValueError."""
+        long_title = "A" * 201
+        with pytest.raises(
+            ValueError, match="chat_title must be 200 characters or less"
+        ):
+            self.calendar_tools._validate_metadata({"chat_title": long_title})
+
+    def test_validate_chat_title_exactly_200_chars_passes(self):
+        """Test chat_title with exactly 200 chars passes."""
+        title = "A" * 200
+        result = self.calendar_tools._validate_metadata({"chat_title": title})
+        assert len(result["chat_title"]) == 200
+
+    def test_validate_chat_title_not_string_raises_error(self):
+        """Test non-string chat_title raises ValueError."""
+        with pytest.raises(ValueError, match="chat_title must be a string"):
+            self.calendar_tools._validate_metadata({"chat_title": 123})
+
+    # chat_url validation tests
+    def test_validate_chat_url_valid_claude_ai(self):
+        """Test valid claude.ai URL passes validation."""
+        metadata = {"chat_url": "https://claude.ai/chat/abc123"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_url"] == "https://claude.ai/chat/abc123"
+
+    def test_validate_chat_url_valid_subdomain(self):
+        """Test valid claude.ai subdomain URL passes validation."""
+        metadata = {"chat_url": "https://app.claude.ai/chat/abc123"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_url"] == "https://app.claude.ai/chat/abc123"
+
+    def test_validate_chat_url_strips_whitespace(self):
+        """Test chat_url strips leading/trailing whitespace."""
+        metadata = {"chat_url": "  https://claude.ai/chat/123  "}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_url"] == "https://claude.ai/chat/123"
+
+    def test_validate_chat_url_http_raises_error(self):
+        """Test HTTP (non-HTTPS) URL raises ValueError."""
+        with pytest.raises(ValueError, match="chat_url must use HTTPS protocol"):
+            self.calendar_tools._validate_metadata(
+                {"chat_url": "http://claude.ai/chat/123"}
+            )
+
+    def test_validate_chat_url_wrong_domain_raises_error(self):
+        """Test URL from wrong domain raises ValueError."""
+        with pytest.raises(ValueError, match="chat_url must be from claude.ai domain"):
+            self.calendar_tools._validate_metadata(
+                {"chat_url": "https://example.com/chat/123"}
+            )
+
+    def test_validate_chat_url_empty_string_raises_error(self):
+        """Test empty chat_url raises ValueError."""
+        with pytest.raises(ValueError, match="chat_url cannot be empty"):
+            self.calendar_tools._validate_metadata({"chat_url": ""})
+
+    def test_validate_chat_url_invalid_format_raises_error(self):
+        """Test invalid URL format raises ValueError."""
+        with pytest.raises(ValueError, match="chat_url must use HTTPS protocol"):
+            self.calendar_tools._validate_metadata({"chat_url": "not a url"})
+
+    def test_validate_chat_url_not_string_raises_error(self):
+        """Test non-string chat_url raises ValueError."""
+        with pytest.raises(ValueError, match="chat_url must be a string"):
+            self.calendar_tools._validate_metadata({"chat_url": 123})
+
+    # project_name validation tests
+    def test_validate_project_name_valid(self):
+        """Test valid project_name passes validation."""
+        metadata = {"project_name": "Q4 Planning"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["project_name"] == "Q4 Planning"
+
+    def test_validate_project_name_with_html_escapes(self):
+        """Test project_name with HTML is escaped."""
+        metadata = {"project_name": "<b>Important</b> Project"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["project_name"] == "&lt;b&gt;Important&lt;/b&gt; Project"
+
+    def test_validate_project_name_strips_whitespace(self):
+        """Test project_name strips leading/trailing whitespace."""
+        metadata = {"project_name": "  Project  "}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["project_name"] == "Project"
+
+    def test_validate_project_name_empty_string_raises_error(self):
+        """Test empty project_name raises ValueError."""
+        with pytest.raises(ValueError, match="project_name cannot be empty"):
+            self.calendar_tools._validate_metadata({"project_name": ""})
+
+    def test_validate_project_name_too_long_raises_error(self):
+        """Test project_name over 100 chars raises ValueError."""
+        long_name = "A" * 101
+        with pytest.raises(
+            ValueError, match="project_name must be 100 characters or less"
+        ):
+            self.calendar_tools._validate_metadata({"project_name": long_name})
+
+    def test_validate_project_name_exactly_100_chars_passes(self):
+        """Test project_name with exactly 100 chars passes."""
+        name = "A" * 100
+        result = self.calendar_tools._validate_metadata({"project_name": name})
+        assert len(result["project_name"]) == 100
+
+    def test_validate_project_name_not_string_raises_error(self):
+        """Test non-string project_name raises ValueError."""
+        with pytest.raises(ValueError, match="project_name must be a string"):
+            self.calendar_tools._validate_metadata({"project_name": 123})
+
+    # created_date validation tests
+    def test_validate_created_date_valid_format(self):
+        """Test valid ISO date format passes validation."""
+        metadata = {"created_date": "2025-09-28"}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["created_date"] == "2025-09-28"
+
+    def test_validate_created_date_strips_whitespace(self):
+        """Test created_date strips leading/trailing whitespace."""
+        metadata = {"created_date": "  2025-09-28  "}
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["created_date"] == "2025-09-28"
+
+    def test_validate_created_date_with_time_raises_error(self):
+        """Test ISO datetime (with time) raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in YYYY-MM-DD format"
+        ):
+            self.calendar_tools._validate_metadata(
+                {"created_date": "2025-09-28T10:00:00"}
+            )
+
+    def test_validate_created_date_invalid_format_raises_error(self):
+        """Test invalid date format raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "09/28/2025"})
+
+    def test_validate_created_date_invalid_date_raises_error(self):
+        """Test invalid date (e.g., Feb 31) raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-02-31"})
+
+    def test_validate_created_date_empty_string_raises_error(self):
+        """Test empty created_date raises ValueError."""
+        with pytest.raises(ValueError, match="created_date cannot be empty"):
+            self.calendar_tools._validate_metadata({"created_date": ""})
+
+    def test_validate_created_date_not_string_raises_error(self):
+        """Test non-string created_date raises ValueError."""
+        with pytest.raises(ValueError, match="created_date must be a string"):
+            self.calendar_tools._validate_metadata({"created_date": 20250928})
+
+    # Combined field validation tests
+    def test_validate_all_fields_valid(self):
+        """Test all valid fields pass validation."""
+        metadata = {
+            "chat_title": "Team Meeting",
+            "chat_url": "https://claude.ai/chat/abc123",
+            "project_name": "Q4 Planning",
+            "created_date": "2025-09-28",
+        }
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Team Meeting"
+        assert result["chat_url"] == "https://claude.ai/chat/abc123"
+        assert result["project_name"] == "Q4 Planning"
+        assert result["created_date"] == "2025-09-28"
+
+    def test_validate_partial_metadata_valid(self):
+        """Test partial metadata with only some fields passes."""
+        metadata = {
+            "chat_title": "Meeting",
+            "project_name": "Project",
+        }
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Meeting"
+        assert result["project_name"] == "Project"
+        assert "chat_url" not in result
+        assert "created_date" not in result
+
+    def test_validate_unknown_fields_ignored(self):
+        """Test unknown fields are ignored (not included in output)."""
+        metadata = {
+            "chat_title": "Meeting",
+            "unknown_field": "value",
+        }
+        result = self.calendar_tools._validate_metadata(metadata)
+        assert result["chat_title"] == "Meeting"
+        assert "unknown_field" not in result
