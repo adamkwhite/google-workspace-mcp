@@ -121,7 +121,9 @@ class TestServerIntegration:
                 "end_time": "2025-09-28T11:00:00",
             }
 
-            result = await server_module.handle_call_tool("create_calendar_event", params)
+            result = await server_module.handle_call_tool(
+                "create_calendar_event", params
+            )
             assert "event-123" in result[0].text
 
     @pytest.mark.asyncio
@@ -188,7 +190,9 @@ class TestServerIntegration:
                 }
             )
 
-            result = await server_module.handle_call_tool("search_emails", {"query": "test"})
+            result = await server_module.handle_call_tool(
+                "search_emails", {"query": "test"}
+            )
             assert "msg-1" in result[0].text
 
     @pytest.mark.asyncio
@@ -220,7 +224,9 @@ class TestServerIntegration:
                 return_value={"documentId": "doc-123", "title": "Test"}
             )
 
-            result = await server_module.handle_call_tool("create_google_doc", {"title": "Test"})
+            result = await server_module.handle_call_tool(
+                "create_google_doc", {"title": "Test"}
+            )
             assert "doc-123" in result[0].text
 
     @pytest.mark.asyncio
