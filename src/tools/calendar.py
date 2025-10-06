@@ -121,15 +121,11 @@ class GoogleCalendarTools:
             raise ValueError("created_date cannot be empty")
 
         # Validate ISO date format with stricter parsing
-        # Use strptime instead of fromisoformat to reject invalid dates like 2025-02-30
+        # strptime rejects invalid dates (e.g., 2025-02-30) and enforces YYYY-MM-DD format
         try:
             datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError as e:
             raise ValueError(f"created_date must be in ISO format (YYYY-MM-DD): {e}")
-
-        # Enforce YYYY-MM-DD format (no time component)
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
-            raise ValueError("created_date must be in YYYY-MM-DD format")
 
         return date_str
 
