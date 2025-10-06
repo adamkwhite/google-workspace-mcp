@@ -194,7 +194,7 @@ class TestMetadataValidation:
     def test_validate_created_date_with_time_raises_error(self):
         """Test ISO datetime (with time) raises ValueError."""
         with pytest.raises(
-            ValueError, match="created_date must be in YYYY-MM-DD format"
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
         ):
             self.calendar_tools._validate_metadata(
                 {"created_date": "2025-09-28T10:00:00"}
@@ -213,6 +213,39 @@ class TestMetadataValidation:
             ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
         ):
             self.calendar_tools._validate_metadata({"created_date": "2025-02-31"})
+
+    def test_validate_created_date_feb_30_raises_error(self):
+        """Test February 30 raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-02-30"})
+
+    def test_validate_created_date_month_13_raises_error(self):
+        """Test month 13 raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-13-01"})
+
+    def test_validate_created_date_april_31_raises_error(self):
+        """Test April 31 raises ValueError (April only has 30 days)."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-04-31"})
+
+    def test_validate_created_date_non_leap_year_feb_29_raises_error(self):
+        """Test Feb 29 in non-leap year raises ValueError."""
+        with pytest.raises(
+            ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
+        ):
+            self.calendar_tools._validate_metadata({"created_date": "2025-02-29"})
+
+    def test_validate_created_date_leap_year_feb_29_passes(self):
+        """Test Feb 29 in leap year (2024) passes validation."""
+        result = self.calendar_tools._validate_metadata({"created_date": "2024-02-29"})
+        assert result["created_date"] == "2024-02-29"
 
     def test_validate_created_date_empty_string_raises_error(self):
         """Test empty created_date raises ValueError."""
