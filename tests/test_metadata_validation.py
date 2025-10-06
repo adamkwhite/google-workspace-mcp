@@ -295,6 +295,66 @@ class TestMetadataValidation:
         assert "unknown_field" not in result
 
 
+class TestFormatMetadata:
+    """Test cases for _format_metadata method."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_auth_manager = Mock()
+        self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
+
+    def test_format_empty_metadata_returns_empty_string(self):
+        """Test that empty metadata dict returns empty string."""
+        result = self.calendar_tools._format_metadata({})
+        assert result == ""
+
+    def test_format_metadata_all_none_values_returns_empty_string(self):
+        """Test that metadata with all None values returns empty string."""
+        metadata = {
+            "created_date": None,
+            "project_name": None,
+            "chat_title": None,
+            "chat_url": None,
+        }
+        result = self.calendar_tools._format_metadata(metadata)
+        assert result == ""
+
+    def test_format_metadata_all_empty_strings_returns_empty_string(self):
+        """Test that metadata with all empty strings returns empty string."""
+        metadata = {
+            "created_date": "",
+            "project_name": "",
+            "chat_title": "",
+            "chat_url": "",
+        }
+        result = self.calendar_tools._format_metadata(metadata)
+        assert result == ""
+
+    def test_format_metadata_with_one_field_formats_correctly(self):
+        """Test that metadata with one field formats correctly."""
+        metadata = {"chat_title": "Test Chat"}
+        result = self.calendar_tools._format_metadata(metadata)
+        assert "\n\n---\n📋 Context:\n" in result
+        assert "Chat: Test Chat" in result
+        assert "Created:" not in result
+        assert "Project:" not in result
+
+    def test_format_metadata_with_all_fields_formats_correctly(self):
+        """Test that metadata with all fields formats correctly."""
+        metadata = {
+            "created_date": "2025-09-28",
+            "project_name": "Test Project",
+            "chat_title": "Test Chat",
+            "chat_url": "https://claude.ai/chat/test123",
+        }
+        result = self.calendar_tools._format_metadata(metadata)
+        assert "\n\n---\n📋 Context:\n" in result
+        assert "Created: 2025-09-28" in result
+        assert "Project: Test Project" in result
+        assert "Chat: Test Chat" in result
+        assert "URL: https://claude.ai/chat/test123" in result
+
+
 class TestUpdateEventValidation:
     """Test cases for update_event metadata validation."""
 
