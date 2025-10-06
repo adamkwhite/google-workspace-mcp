@@ -142,3 +142,52 @@ ls -la config/credentials.json
 - **YAML syntax**: GitHub validation can be "lazy" - config errors may not surface until PR triggers validation
 - **Workflow interdependencies**: Failed workflows can prevent other validations from running
 - **Debugging approach**: Fix one workflow at a time, rebase/force-push to trigger fresh validation
+
+## Current Status (Updated: 2025-10-06)
+
+**Current Branch**: `main`
+
+**Recent Work Completed**:
+- PR #32: Removed redundant regex validation in date validation (Issue #30)
+- PR #33: Added empty metadata edge case handling (Issue #20)
+- PR #34: Extracted magic numbers to named constants (Issue #27)
+- PR #35: Added edge case tests for date validation (Issue #31)
+- Issue #36: Created for test organization improvements (low priority)
+
+**Test Coverage**: 168 tests passing, ~85% coverage
+- Unit tests for metadata validation
+- Edge case coverage for date validation
+- Empty metadata handling tests
+
+**Known Issues & Improvements**:
+- Issue #36: Test organization could be improved (low priority)
+- Issue #21: TypedDict for metadata type safety (enhancement)
+- Issues #11-13: Future features (Sheets, Slides, Gmail enhancements)
+
+**Next Steps**:
+- Consider Issue #21 (TypedDict) for improved type safety
+- Address remaining low-priority refactoring issues
+- Evaluate feature requests (Sheets, Slides, Gmail enhancements)
+
+## Metadata Validation System
+
+**Security Architecture** (src/tools/calendar.py):
+- **Input Validation**: All metadata fields validated before storage
+- **HTML Escaping**: Prevents XSS attacks via html.escape()
+- **URL Whitelisting**: Only claude.ai domain allowed for chat_url
+- **Length Limits**: Constants MAX_CHAT_TITLE_LENGTH (200), MAX_PROJECT_NAME_LENGTH (100)
+- **Date Validation**: strptime enforces strict ISO format (YYYY-MM-DD)
+- **Double-Escaping Prevention**: Metadata stripped before re-validation on updates
+
+**Validation Methods**:
+- `_validate_text_field()`: HTML escaping, length limits, non-empty checks
+- `_validate_url_field()`: HTTPS enforcement, domain whitelisting
+- `_validate_date_field()`: ISO format validation using strptime
+- `_validate_metadata()`: Orchestrates validation for all fields
+- `_format_metadata()`: Formats validated metadata with empty content check
+
+**Critical Patterns**:
+- Input must be raw, unescaped text (validation applies escaping)
+- strptime provides strict validation (rejects Feb 30, day 0, negative values)
+- Empty metadata returns empty string to avoid visual clutter
+- Metadata section stripped before updates to prevent double-escaping
