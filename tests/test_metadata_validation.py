@@ -290,7 +290,9 @@ class TestUpdateEventValidation:
         # Mock the update() call
         updated_event = existing_event.copy()
         updated_event["description"] = (
-            "Old description\n\n---\n📋 Context:\nCreated: 2025-09-28\nProject: Q4 Planning\nChat: Team Meeting\nURL: https://claude.ai/chat/abc123\n"
+            "Old description\n\n---\n📋 Context:\n"
+            "Created: 2025-09-28\nProject: Q4 Planning\n"
+            "Chat: Team Meeting\nURL: https://claude.ai/chat/abc123\n"
         )
         mock_service.events().update().execute.return_value = updated_event
 
@@ -305,7 +307,7 @@ class TestUpdateEventValidation:
             },
         }
 
-        result = await self.calendar_tools.update_event(params)
+        await self.calendar_tools.update_event(params)
 
         # Verify metadata was validated and added
         update_call = mock_service.events().update.call_args
@@ -336,7 +338,7 @@ class TestUpdateEventValidation:
         }
 
         # Should not raise - but XSS should be escaped
-        result = await self.calendar_tools.update_event(params)
+        await self.calendar_tools.update_event(params)
 
         # Verify XSS was escaped
         update_call = mock_service.events().update.call_args
