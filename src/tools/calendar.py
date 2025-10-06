@@ -1,9 +1,13 @@
 """Google Calendar tools for MCP server."""
 
+import html
 import logging
 import os
+import re
 import sys
+from datetime import datetime
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -30,6 +34,108 @@ class GoogleCalendarTools:
             creds = self.auth_manager.get_credentials()
             self.service = build("calendar", "v3", credentials=creds)
         return self.service
+
+    def _validate_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and sanitize metadata fields.
+
+        Args:
+            metadata: Dictionary with optional fields: chat_title, chat_url,
+                     project_name, created_date
+
+        Returns:
+            Validated and sanitized metadata dictionary
+
+        Raises:
+            ValueError: If any field fails validation
+        """
+        if not metadata:
+            return {}
+
+        if not isinstance(metadata, dict):
+            raise ValueError("metadata must be a dictionary")
+
+        validated = {}
+
+        # Validate chat_title: sanitize HTML, enforce max length
+        if "chat_title" in metadata:
+            if not isinstance(metadata["chat_title"], str):
+                raise ValueError("chat_title must be a string")
+
+            title = metadata["chat_title"].strip()
+            if not title:
+                raise ValueError("chat_title cannot be empty")
+
+            if len(title) > 200:
+                raise ValueError("chat_title must be 200 characters or less")
+
+            # Sanitize HTML/special characters
+            validated["chat_title"] = html.escape(title)
+
+        # Validate chat_url: whitelist allowed domains
+        if "chat_url" in metadata:
+            if not isinstance(metadata["chat_url"], str):
+                raise ValueError("chat_url must be a string")
+
+            url = metadata["chat_url"].strip()
+            if not url:
+                raise ValueError("chat_url cannot be empty")
+
+            # Parse and validate URL
+            try:
+                parsed = urlparse(url)
+            except Exception as e:
+                raise ValueError(f"chat_url is not a valid URL: {e}")
+
+            # Enforce HTTPS
+            if parsed.scheme != "https":
+                raise ValueError("chat_url must use HTTPS protocol")
+
+            # Whitelist allowed domains (claude.ai and subdomains)
+            allowed_pattern = r"^(.*\.)?claude\.ai$"
+            if not re.match(allowed_pattern, parsed.netloc):
+                raise ValueError("chat_url must be from claude.ai domain")
+
+            validated["chat_url"] = url
+
+        # Validate project_name: sanitize special characters, enforce max length
+        if "project_name" in metadata:
+            if not isinstance(metadata["project_name"], str):
+                raise ValueError("project_name must be a string")
+
+            project = metadata["project_name"].strip()
+            if not project:
+                raise ValueError("project_name cannot be empty")
+
+            if len(project) > 100:
+                raise ValueError("project_name must be 100 characters or less")
+
+            # Sanitize HTML/special characters
+            validated["project_name"] = html.escape(project)
+
+        # Validate created_date: enforce ISO date format (YYYY-MM-DD)
+        if "created_date" in metadata:
+            if not isinstance(metadata["created_date"], str):
+                raise ValueError("created_date must be a string")
+
+            date_str = metadata["created_date"].strip()
+            if not date_str:
+                raise ValueError("created_date cannot be empty")
+
+            # Validate ISO date format
+            try:
+                datetime.fromisoformat(date_str)
+            except ValueError as e:
+                raise ValueError(
+                    f"created_date must be in ISO format (YYYY-MM-DD): {e}"
+                )
+
+            # Enforce YYYY-MM-DD format (no time component)
+            if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
+                raise ValueError("created_date must be in YYYY-MM-DD format")
+
+            validated["created_date"] = date_str
+
+        return validated
 
     def _format_metadata(self, metadata: Dict[str, Any]) -> str:
         """Format metadata into a description section.
@@ -91,9 +197,10 @@ class GoogleCalendarTools:
             # Add optional fields
             description = params.get("description", "")
 
-            # Append metadata to description if provided
+            # Validate and append metadata to description if provided
             if "metadata" in params and params["metadata"]:
-                description += self._format_metadata(params["metadata"])
+                validated_metadata = self._validate_metadata(params["metadata"])
+                description += self._format_metadata(validated_metadata)
 
             if description:
                 event_data["description"] = description
