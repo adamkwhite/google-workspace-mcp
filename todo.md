@@ -20,6 +20,17 @@ Format: [Category].[Priority].[Sequence]
 - [x] DOCS.1.1 - Create basic Google Docs creation tool
 - [x] CORE.1.3 - Update server.py with all tools
 
+### Phase 1.5: Security & Quality (Oct 2025) ✓
+- [x] CAL.1.3 - Implement metadata validation with security controls (PR #24)
+- [x] CAL.1.4 - Fix double-escaping metadata bug (PR #28)
+- [x] CAL.1.5 - Remove redundant regex validation (PR #32, Issue #30)
+- [x] CAL.1.6 - Handle empty metadata edge case (PR #33, Issue #20)
+- [x] CAL.1.7 - Extract magic numbers to constants (PR #34, Issue #27)
+- [x] CAL.1.8 - Add edge case tests for date validation (PR #35, Issue #31)
+- [x] TEST.1.4 - Fix test import organization (Issue #8)
+- [ ] TEST.1.5 - Reorganize date validation tests (Issue #36 - Low Priority)
+- [ ] CAL.1.9 - Add TypedDict for metadata type safety (Issue #21 - Enhancement)
+
 ### Phase 2: Core Features (In Progress)
 - [ ] SHEETS.1.1 - Implement create_google_sheet tool
 - [ ] SHEETS.1.2 - Add data population functionality
@@ -78,6 +89,17 @@ Format: [Category].[Priority].[Sequence]
 - [x] Google Docs basic functionality
 - [x] Unit test framework setup
 - [x] Documentation structure
+- [x] Metadata validation security implementation (PR #24, #28)
+- [x] Code quality improvements (PR #32, #33, #34, #35)
+- [x] Comprehensive test coverage for metadata validation (168 tests)
+
+## Recent Learnings (Oct 2025)
+- **strptime() validation**: Provides strict date validation (rejects Feb 30, day 0, negative values)
+- **Double-escaping prevention**: Strip metadata before re-validation on updates
+- **Empty metadata handling**: Check for content before formatting to avoid visual clutter
+- **Test organization**: Group tests by category for better maintainability
+- **Magic numbers**: Extract to named constants for self-documenting code
+- **Security patterns**: HTML escaping, URL whitelisting, length limits for user input
 
 ## Notes
 - Focus on Gmail account support (most users)
@@ -85,3 +107,4 @@ Format: [Category].[Priority].[Sequence]
 - Each tool should be independently testable
 - Maintain consistent error handling patterns
 - Follow Google API best practices
+- **PR Review Workflow**: Always wait for user approval before merging PRs
