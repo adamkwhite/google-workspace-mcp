@@ -31,28 +31,36 @@ class TestTokenRefresh:
         """Test should_refresh_token returns True when expiry is within buffer."""
         self.auth_manager.creds = Mock()
         # Set expiry to 5 minutes from now (within 10-minute buffer)
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
+            minutes=5
+        )
         assert self.auth_manager.should_refresh_token() is True
 
     def test_should_refresh_token_exactly_at_buffer(self):
         """Test should_refresh_token returns True when expiry equals buffer."""
         self.auth_manager.creds = Mock()
         # Set expiry to exactly 10 minutes from now (at buffer boundary)
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(seconds=600)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
+            seconds=600
+        )
         assert self.auth_manager.should_refresh_token() is True
 
     def test_should_refresh_token_outside_buffer(self):
         """Test should_refresh_token returns False when expiry is beyond buffer."""
         self.auth_manager.creds = Mock()
         # Set expiry to 15 minutes from now (beyond 10-minute buffer)
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(minutes=15)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
+            minutes=15
+        )
         assert self.auth_manager.should_refresh_token() is False
 
     def test_should_refresh_token_already_expired(self):
         """Test should_refresh_token returns True when token is already expired."""
         self.auth_manager.creds = Mock()
         # Set expiry to past time
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) - timedelta(minutes=5)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) - timedelta(
+            minutes=5
+        )
         assert self.auth_manager.should_refresh_token() is True
 
     @pytest.mark.asyncio
@@ -77,7 +85,9 @@ class TestTokenRefresh:
     async def test_refresh_token_failure_triggers_reauth(self, mock_request):
         """Test that refresh failure triggers re-authentication."""
         self.auth_manager.creds = Mock()
-        self.auth_manager.creds.refresh = Mock(side_effect=RefreshError("Token revoked"))
+        self.auth_manager.creds.refresh = Mock(
+            side_effect=RefreshError("Token revoked")
+        )
 
         # Mock _authenticate and save_credentials
         self.auth_manager._authenticate = AsyncMock()
@@ -94,7 +104,9 @@ class TestTokenRefresh:
     async def test_ensure_valid_credentials_proactive_refresh(self):
         """Test ensure_valid_credentials triggers proactive refresh."""
         self.auth_manager.creds = Mock()
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
+            minutes=5
+        )
         self.auth_manager.creds.valid = True
 
         # Mock refresh_token
@@ -147,7 +159,9 @@ class TestTokenRefresh:
         import threading
 
         self.auth_manager.creds = Mock()
-        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
+        self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
+            minutes=5
+        )
         self.auth_manager.creds.valid = True
 
         # Mock refresh_token
