@@ -3,9 +3,12 @@
 import logging
 import os
 import pickle
+import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
@@ -19,12 +22,18 @@ logger = logging.getLogger(__name__)
 class GoogleAuthManager:
     """Manages authentication for Google Workspace APIs."""
 
+    # Token refresh buffer: refresh tokens 10 minutes before expiration
+    TOKEN_REFRESH_BUFFER = 600  # seconds
+
     def __init__(self, credentials_path: Optional[str] = None):
         self.credentials_path = credentials_path or os.getenv(
             "GOOGLE_CREDENTIALS_PATH", "config/credentials.json"
         )
         self.token_path = Path("config/token.pickle")
         self.creds: Optional[Credentials] = None
+
+        # Thread safety for token refresh
+        self.refresh_lock = threading.Lock()
 
         # Initialize scope manager
         self.scope_manager = ScopeManager()
@@ -75,15 +84,11 @@ class GoogleAuthManager:
                 and not needs_reauth
             ):
                 logger.info("Refreshing expired credentials...")
-                self.creds.refresh(Request())
+                await self.refresh_token()
             else:
                 logger.info("Initiating new authentication flow...")
                 await self._authenticate()
-
-            # Save credentials for next run
-            self.token_path.parent.mkdir(exist_ok=True)
-            with open(self.token_path, "wb") as token:
-                pickle.dump(self.creds, token)
+                self.save_credentials()
 
         logger.info("Authentication successful!")
 
@@ -145,3 +150,69 @@ class GoogleAuthManager:
     def get_enabled_services(self) -> List[str]:
         """Get list of enabled services."""
         return list(self.scope_manager.get_enabled_services())
+
+    def should_refresh_token(self) -> bool:
+        """
+        Check if token should be refreshed proactively.
+
+        Returns True if the token will expire within TOKEN_REFRESH_BUFFER seconds.
+        """
+        if not self.creds or not self.creds.expiry:
+            return False
+
+        time_until_expiry = (self.creds.expiry - datetime.now(timezone.utc)).total_seconds()
+        return time_until_expiry <= self.TOKEN_REFRESH_BUFFER
+
+    async def refresh_token(self):
+        """
+        Refresh the OAuth2 access token.
+
+        Raises:
+            RefreshError: If the token refresh fails and re-authentication is needed.
+        """
+        try:
+            logger.info("Refreshing OAuth2 token...")
+            self.creds.refresh(Request())
+            self.save_credentials()
+            logger.info("Token refreshed successfully")
+        except RefreshError as e:
+            logger.error(f"Token refresh failed: {e}")
+            logger.info("Re-authentication required - refresh token may be revoked")
+            # Trigger re-authentication flow
+            await self._authenticate()
+            self.save_credentials()
+
+    def save_credentials(self):
+        """Save credentials to disk with proper metadata."""
+        if not self.creds:
+            return
+
+        self.token_path.parent.mkdir(exist_ok=True)
+        with open(self.token_path, "wb") as token:
+            pickle.dump(self.creds, token)
+        logger.debug(f"Credentials saved to {self.token_path}")
+
+    async def ensure_valid_credentials(self) -> Credentials:
+        """
+        Ensure credentials are valid, refreshing if necessary.
+
+        This method combines proactive and reactive token refresh:
+        - Proactively refreshes tokens within TOKEN_REFRESH_BUFFER of expiration
+        - Reactively refreshes if token is invalid/expired
+
+        Thread-safe: Uses a lock to prevent concurrent refresh attempts.
+
+        Returns:
+            Credentials: Valid, refreshed credentials.
+        """
+        with self.refresh_lock:
+            # Proactive refresh: refresh before expiration
+            if self.should_refresh_token():
+                logger.debug("Proactive token refresh triggered")
+                await self.refresh_token()
+            # Reactive refresh: token is already invalid
+            elif not self.creds or not self.creds.valid:
+                logger.debug("Reactive token refresh triggered")
+                await self.refresh_token()
+
+        return self.creds

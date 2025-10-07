@@ -19,11 +19,12 @@ class GmailTools:
         self.auth_manager = auth_manager
         self.service = None
 
-    def _get_service(self):
-        """Get or create the Gmail service."""
-        if not self.service:
-            creds = self.auth_manager.get_credentials()
-            self.service = build("gmail", "v1", credentials=creds)
+    async def _get_service(self):
+        """Get or create the Gmail service with refreshed credentials."""
+        # Always ensure credentials are valid before API calls
+        creds = await self.auth_manager.ensure_valid_credentials()
+        # Rebuild service to use refreshed credentials
+        self.service = build("gmail", "v1", credentials=creds)
         return self.service
 
     def _create_message(self, params: Dict[str, Any]) -> MIMEMultipart:
@@ -86,7 +87,7 @@ class GmailTools:
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
 
             # Send the message
-            service = self._get_service()
+            service = await self._get_service()
             sent_message = (
                 service.users()
                 .messages()
@@ -130,7 +131,7 @@ class GmailTools:
             max_results = params.get("max_results", 10)
             include_body = params.get("include_body", False)
 
-            service = self._get_service()
+            service = await self._get_service()
 
             # Search for messages
             results = (
@@ -219,7 +220,7 @@ class GmailTools:
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
 
             # Create draft
-            service = self._get_service()
+            service = await self._get_service()
             draft = (
                 service.users()
                 .drafts()

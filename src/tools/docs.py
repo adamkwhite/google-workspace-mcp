@@ -17,18 +17,20 @@ class GoogleDocsTools:
         self.docs_service = None
         self.drive_service = None
 
-    def _get_docs_service(self):
-        """Get or create the Google Docs service."""
-        if not self.docs_service:
-            creds = self.auth_manager.get_credentials()
-            self.docs_service = build("docs", "v1", credentials=creds)
+    async def _get_docs_service(self):
+        """Get or create the Google Docs service with refreshed credentials."""
+        # Always ensure credentials are valid before API calls
+        creds = await self.auth_manager.ensure_valid_credentials()
+        # Rebuild service to use refreshed credentials
+        self.docs_service = build("docs", "v1", credentials=creds)
         return self.docs_service
 
-    def _get_drive_service(self):
-        """Get or create the Google Drive service."""
-        if not self.drive_service:
-            creds = self.auth_manager.get_credentials()
-            self.drive_service = build("drive", "v3", credentials=creds)
+    async def _get_drive_service(self):
+        """Get or create the Google Drive service with refreshed credentials."""
+        # Always ensure credentials are valid before API calls
+        creds = await self.auth_manager.ensure_valid_credentials()
+        # Rebuild service to use refreshed credentials
+        self.drive_service = build("drive", "v3", credentials=creds)
         return self.drive_service
 
     async def create_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -50,8 +52,8 @@ class GoogleDocsTools:
             folder_id = params.get("folder_id")
             share_with = params.get("share_with", [])
 
-            docs_service = self._get_docs_service()
-            drive_service = self._get_drive_service()
+            docs_service = await self._get_docs_service()
+            drive_service = await self._get_drive_service()
 
             # Create the document
             document = docs_service.documents().create(body={"title": title}).execute()
@@ -148,7 +150,7 @@ class GoogleDocsTools:
             index = params.get("index")
             replace_all = params.get("replace_all", False)
 
-            docs_service = self._get_docs_service()
+            docs_service = await self._get_docs_service()
 
             # Get document to determine insert position
             document = docs_service.documents().get(documentId=document_id).execute()
