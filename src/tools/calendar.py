@@ -36,8 +36,13 @@ class GoogleCalendarTools:
         """Get or create the Google Calendar service with refreshed credentials."""
         # Always ensure credentials are valid before API calls
         creds = await self.auth_manager.ensure_valid_credentials()
-        # Rebuild service to use refreshed credentials
-        self.service = build("calendar", "v3", credentials=creds)
+
+        # Only rebuild service if not cached or credentials object changed
+        # Note: Google's Credentials object is updated in-place during refresh,
+        # so we cache the service and rely on the credentials being updated
+        if not self.service:
+            self.service = build("calendar", "v3", credentials=creds)
+
         return self.service
 
     def _validate_text_field(self, value: Any, field_name: str, max_length: int) -> str:

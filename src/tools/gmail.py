@@ -23,8 +23,12 @@ class GmailTools:
         """Get or create the Gmail service with refreshed credentials."""
         # Always ensure credentials are valid before API calls
         creds = await self.auth_manager.ensure_valid_credentials()
-        # Rebuild service to use refreshed credentials
-        self.service = build("gmail", "v1", credentials=creds)
+
+        # Only rebuild service if not cached
+        # Note: Google's Credentials object is updated in-place during refresh
+        if not self.service:
+            self.service = build("gmail", "v1", credentials=creds)
+
         return self.service
 
     def _create_message(self, params: Dict[str, Any]) -> MIMEMultipart:

@@ -1,9 +1,9 @@
 """Authentication module for Google Workspace APIs."""
 
+import asyncio
 import logging
 import os
 import pickle
-import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
@@ -32,8 +32,8 @@ class GoogleAuthManager:
         self.token_path = Path("config/token.pickle")
         self.creds: Optional[Credentials] = None
 
-        # Thread safety for token refresh
-        self.refresh_lock = threading.Lock()
+        # Async lock for token refresh concurrency control
+        self.refresh_lock = asyncio.Lock()
 
         # Initialize scope manager
         self.scope_manager = ScopeManager()
@@ -202,12 +202,12 @@ class GoogleAuthManager:
         - Proactively refreshes tokens within TOKEN_REFRESH_BUFFER of expiration
         - Reactively refreshes if token is invalid/expired
 
-        Thread-safe: Uses a lock to prevent concurrent refresh attempts.
+        Async-safe: Uses asyncio.Lock to prevent concurrent refresh attempts.
 
         Returns:
             Credentials: Valid, refreshed credentials.
         """
-        with self.refresh_lock:
+        async with self.refresh_lock:
             # Proactive refresh: refresh before expiration
             if self.should_refresh_token():
                 logger.debug("Proactive token refresh triggered")
