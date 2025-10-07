@@ -1,6 +1,6 @@
 """Tests for Gmail tools."""
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -11,7 +11,8 @@ from tools.gmail import GmailTools
 def mock_auth_manager():
     """Create a mock auth manager."""
     auth_manager = Mock()
-    auth_manager.get_credentials.return_value = Mock()
+    # Mock ensure_valid_credentials as an async method
+    auth_manager.ensure_valid_credentials = AsyncMock(return_value=Mock())
     return auth_manager
 
 

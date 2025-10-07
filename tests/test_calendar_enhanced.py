@@ -1,6 +1,6 @@
 """Integration tests for enhanced calendar functionality with computed fields."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -13,6 +13,8 @@ class TestEnhancedCalendar:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_auth_manager = Mock()
+        # Mock ensure_valid_credentials as an async method
+        self.mock_auth_manager.ensure_valid_credentials = AsyncMock(return_value=Mock())
         self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
 
     @patch("tools.calendar.build")
@@ -43,9 +45,6 @@ class TestEnhancedCalendar:
         }
 
         mock_service.events().list().execute.return_value = {"items": [mock_event]}
-
-        # Mock authentication
-        self.mock_auth_manager.get_credentials.return_value = Mock()
 
         # Call list_events
         result = await self.calendar_tools.list_events({})
@@ -107,9 +106,6 @@ class TestEnhancedCalendar:
 
         mock_service.events().insert().execute.return_value = mock_created_event
 
-        # Mock authentication
-        self.mock_auth_manager.get_credentials.return_value = Mock()
-
         # Create event parameters
         params = {
             "summary": "New Event",
@@ -162,9 +158,6 @@ class TestEnhancedCalendar:
         }
 
         mock_service.events().list().execute.return_value = {"items": [mock_event]}
-
-        # Mock authentication
-        self.mock_auth_manager.get_credentials.return_value = Mock()
 
         # Call list_events
         result = await self.calendar_tools.list_events({})

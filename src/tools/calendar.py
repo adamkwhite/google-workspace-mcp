@@ -32,11 +32,12 @@ class GoogleCalendarTools:
         self.auth_manager = auth_manager
         self.service = None
 
-    def _get_service(self):
-        """Get or create the Google Calendar service."""
-        if not self.service:
-            creds = self.auth_manager.get_credentials()
-            self.service = build("calendar", "v3", credentials=creds)
+    async def _get_service(self):
+        """Get or create the Google Calendar service with refreshed credentials."""
+        # Always ensure credentials are valid before API calls
+        creds = await self.auth_manager.ensure_valid_credentials()
+        # Rebuild service to use refreshed credentials
+        self.service = build("calendar", "v3", credentials=creds)
         return self.service
 
     def _validate_text_field(self, value: Any, field_name: str, max_length: int) -> str:
@@ -265,7 +266,7 @@ class GoogleCalendarTools:
                 event_data["sendNotifications"] = True
 
             # Create the event
-            service = self._get_service()
+            service = await self._get_service()
             event = (
                 service.events()
                 .insert(
@@ -324,7 +325,7 @@ class GoogleCalendarTools:
             event_id = params["event_id"]
 
             # Get existing event first
-            service = self._get_service()
+            service = await self._get_service()
             event = (
                 service.events().get(calendarId=calendar_id, eventId=event_id).execute()
             )
@@ -429,7 +430,7 @@ class GoogleCalendarTools:
             calendar_id = params["calendar_id"]
             event_id = params["event_id"]
 
-            service = self._get_service()
+            service = await self._get_service()
             service.events().delete(
                 calendarId=calendar_id, eventId=event_id, sendUpdates="all"
             ).execute()
@@ -455,7 +456,7 @@ class GoogleCalendarTools:
             Dictionary with list of calendars
         """
         try:
-            service = self._get_service()
+            service = await self._get_service()
             calendar_list = service.calendarList().list().execute()
 
             calendars = []
@@ -516,7 +517,7 @@ class GoogleCalendarTools:
             if "q" in params:
                 request_params["q"] = params["q"]
 
-            service = self._get_service()
+            service = await self._get_service()
             events_result = service.events().list(**request_params).execute()
             events = events_result.get("items", [])
 

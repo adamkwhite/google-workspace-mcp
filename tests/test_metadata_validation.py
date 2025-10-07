@@ -1,6 +1,6 @@
 """Unit tests for metadata validation in calendar tools."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -13,6 +13,8 @@ class TestMetadataValidation:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_auth_manager = Mock()
+        # Mock ensure_valid_credentials as an async method
+        self.mock_auth_manager.ensure_valid_credentials = AsyncMock(return_value=Mock())
         self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
 
     def test_validate_empty_metadata_returns_empty_dict(self):
@@ -329,6 +331,8 @@ class TestFormatMetadata:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_auth_manager = Mock()
+        # Mock ensure_valid_credentials as an async method
+        self.mock_auth_manager.ensure_valid_credentials = AsyncMock(return_value=Mock())
         self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
 
     def test_format_empty_metadata_returns_empty_string(self):
@@ -389,6 +393,8 @@ class TestUpdateEventValidation:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_auth_manager = Mock()
+        # Mock ensure_valid_credentials as an async method
+        self.mock_auth_manager.ensure_valid_credentials = AsyncMock(return_value=Mock())
         self.calendar_tools = GoogleCalendarTools(self.mock_auth_manager)
 
     @patch("tools.calendar.build")
