@@ -156,8 +156,6 @@ class TestTokenRefresh:
     @pytest.mark.asyncio
     async def test_ensure_valid_credentials_uses_lock(self):
         """Test ensure_valid_credentials uses threading lock for safety."""
-        import threading
-
         self.auth_manager.creds = Mock()
         self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
             minutes=5
