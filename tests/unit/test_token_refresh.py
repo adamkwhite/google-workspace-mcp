@@ -155,7 +155,9 @@ class TestTokenRefresh:
 
     @pytest.mark.asyncio
     async def test_ensure_valid_credentials_uses_lock(self):
-        """Test ensure_valid_credentials uses threading lock for safety."""
+        """Test ensure_valid_credentials uses asyncio.Lock for concurrency safety."""
+        import asyncio
+
         self.auth_manager.creds = Mock()
         self.auth_manager.creds.expiry = datetime.now(timezone.utc) + timedelta(
             minutes=5
@@ -165,8 +167,8 @@ class TestTokenRefresh:
         # Mock refresh_token
         self.auth_manager.refresh_token = AsyncMock()
 
-        # Verify the auth_manager has a refresh_lock of the correct type
-        assert type(self.auth_manager.refresh_lock).__name__ == "lock"
+        # Verify the auth_manager has an asyncio.Lock
+        assert isinstance(self.auth_manager.refresh_lock, asyncio.Lock)
 
         # Call ensure_valid_credentials
         await self.auth_manager.ensure_valid_credentials()

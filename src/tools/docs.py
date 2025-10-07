@@ -21,16 +21,24 @@ class GoogleDocsTools:
         """Get or create the Google Docs service with refreshed credentials."""
         # Always ensure credentials are valid before API calls
         creds = await self.auth_manager.ensure_valid_credentials()
-        # Rebuild service to use refreshed credentials
-        self.docs_service = build("docs", "v1", credentials=creds)
+
+        # Only rebuild service if not cached
+        # Note: Google's Credentials object is updated in-place during refresh
+        if not self.docs_service:
+            self.docs_service = build("docs", "v1", credentials=creds)
+
         return self.docs_service
 
     async def _get_drive_service(self):
         """Get or create the Google Drive service with refreshed credentials."""
         # Always ensure credentials are valid before API calls
         creds = await self.auth_manager.ensure_valid_credentials()
-        # Rebuild service to use refreshed credentials
-        self.drive_service = build("drive", "v3", credentials=creds)
+
+        # Only rebuild service if not cached
+        # Note: Google's Credentials object is updated in-place during refresh
+        if not self.drive_service:
+            self.drive_service = build("drive", "v3", credentials=creds)
+
         return self.drive_service
 
     async def create_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
