@@ -160,7 +160,9 @@ class GoogleAuthManager:
         if not self.creds or not self.creds.expiry:
             return False
 
-        time_until_expiry = (self.creds.expiry - datetime.now(timezone.utc)).total_seconds()
+        time_until_expiry = (
+            self.creds.expiry - datetime.now(timezone.utc)
+        ).total_seconds()
         return time_until_expiry <= self.TOKEN_REFRESH_BUFFER
 
     async def refresh_token(self):
