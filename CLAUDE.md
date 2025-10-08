@@ -191,3 +191,6 @@ ls -la config/credentials.json
 - strptime provides strict validation (rejects Feb 30, day 0, negative values)
 - Empty metadata returns empty string to avoid visual clutter
 - Metadata section stripped before updates to prevent double-escaping
+- Token efficiency tip: The --watch flag creates a polling loop that sends continuous output. For
+  future monitoring, single gh pr checks commands are more token-efficient. The trade-off is
+  convenience vs. cost.

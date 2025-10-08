@@ -35,7 +35,10 @@
       "Bash(gh issue view:*)",
       "mcp__sequential-thinking__sequentialthinking",
       "mcp__google-workspace__get_mcp_configuration",
-      "Read(//home/adam/Code/**)"
+      "Read(//home/adam/Code/**)",
+      "Bash(pytest:*)",
+      "Bash(gh run view:*)",
+      "Bash(black:*)"
     ],
     "deny": [],
     "ask": []
