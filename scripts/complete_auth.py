@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """Complete Google OAuth authentication with authorization code."""
 
-import sys
 import os
 import pickle
+import sys
 from pathlib import Path
-sys.path.append('src')
+
+sys.path.append("src")
 
 from google_auth_oauthlib.flow import InstalledAppFlow
+
 from auth.google_auth import GoogleAuthManager
+
 
 def complete_auth(auth_code):
     """Complete authentication with authorization code."""
-    credentials_path = 'config/credentials.json'
-    token_path = Path('config/token.pickle')
+    credentials_path = "config/credentials.json"
+    token_path = Path("config/token.pickle")
 
     if not os.path.exists(credentials_path):
         print(f"❌ Credentials file not found: {credentials_path}")
@@ -24,7 +27,7 @@ def complete_auth(auth_code):
         scopes = GoogleAuthManager.SCOPES
 
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, scopes)
-        flow.redirect_uri = 'http://localhost:8080'
+        flow.redirect_uri = "http://localhost:8080"
 
         # Exchange authorization code for credentials
         flow.fetch_token(code=auth_code)
@@ -32,7 +35,7 @@ def complete_auth(auth_code):
 
         # Save credentials
         token_path.parent.mkdir(exist_ok=True)
-        with open(token_path, 'wb') as token:
+        with open(token_path, "wb") as token:
             pickle.dump(creds, token)
 
         print("✅ Authentication completed successfully!")
@@ -48,6 +51,7 @@ def complete_auth(auth_code):
         print("   1. Copied the full authorization code correctly")
         print("   2. Didn't include extra characters or spaces")
         print("   3. Used the code quickly (they expire fast)")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

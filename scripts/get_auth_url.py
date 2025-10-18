@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """Get Google OAuth URL for manual authentication in WSL."""
 
-import sys
 import os
-sys.path.append('src')
+import sys
+
+sys.path.append("src")
 
 from google_auth_oauthlib.flow import InstalledAppFlow
+
 from auth.google_auth import GoogleAuthManager
+
 
 def get_auth_url():
     """Get authentication URL for manual browser opening."""
-    credentials_path = 'config/credentials.json'
+    credentials_path = "config/credentials.json"
     if not os.path.exists(credentials_path):
         print(f"❌ Credentials file not found: {credentials_path}")
-        print("Please download OAuth2 credentials from Google Cloud Console and save as config/credentials.json")
+        print(
+            "Please download OAuth2 credentials from Google Cloud Console "
+            "and save as config/credentials.json"
+        )
         return
 
     # Same scopes as GoogleAuthManager
@@ -21,11 +27,10 @@ def get_auth_url():
 
     try:
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, scopes)
-        flow.redirect_uri = 'http://localhost:8080'  # Use a standard port
+        flow.redirect_uri = "http://localhost:8080"  # Use a standard port
 
         auth_url, _ = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true'
+            access_type="offline", include_granted_scopes="true"
         )
 
         print("🔗 GOOGLE AUTHENTICATION REQUIRED")
@@ -45,6 +50,7 @@ def get_auth_url():
 
     except Exception as e:
         print(f"❌ Error generating auth URL: {e}")
+
 
 if __name__ == "__main__":
     get_auth_url()
