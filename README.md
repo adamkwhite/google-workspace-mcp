@@ -34,8 +34,9 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 - Create drafts for later editing
 - Support for CC/BCC recipients
 
-### 📄 **Google Docs** 
+### 📄 **Google Docs**
 - Create documents with initial content
+- Update existing documents with new content
 - Organize in Drive folders
 - Share with collaborators
 
@@ -48,6 +49,31 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 - Create presentations
 - Add slides with different layouts
 - Insert content
+
+## Security & Design Principles
+
+**🛡️ Safe-by-Design: Intentionally Limited Operations**
+
+This MCP server follows the principle of least privilege by intentionally excluding destructive operations:
+
+### ✅ **Supported Operations:**
+- **Read**: List calendars/events, search emails, view documents
+- **Create**: New events, emails, drafts, documents
+- **Update**: Modify existing documents
+- **Send**: Send emails (with explicit user intent)
+
+### ❌ **Intentionally Excluded:**
+- **Delete**: No deletion of events, emails, or documents
+- **Trash**: No moving items to trash
+- **Permanent removal**: No irreversible data destruction
+
+**Why?** This design provides an additional safety layer:
+- Prevents accidental data loss through AI interaction
+- Requires manual confirmation via Google UIs for destructive actions
+- Aligns with security best practice: "AI can create and modify, humans confirm deletion"
+- Reduces risk of unintended consequences from misunderstood prompts
+
+**Manual Cleanup:** Test data created through the MCP server (calendar events, documents, emails) should be deleted manually through Google Calendar, Drive, or Gmail interfaces.
 
 ## Quick Start
 
