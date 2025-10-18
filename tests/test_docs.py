@@ -45,7 +45,7 @@ class TestGoogleDocsTools:
         params = {"title": "Test Document"}
 
         # Execute
-        result = await docs_tools.create_document(params)
+        result = docs_tools.create_document(params)
 
         # Verify basic functionality
         assert result["documentId"] == "test-doc-id"
@@ -75,7 +75,7 @@ class TestGoogleDocsTools:
         params = {"title": "Test Document", "content": "This is test content"}
 
         # Execute
-        result = await docs_tools.create_document(params)
+        result = docs_tools.create_document(params)
 
         # Verify
         assert result["documentId"] == "test-doc-id"
@@ -106,7 +106,7 @@ class TestGoogleDocsTools:
         params = {"title": "Test Document", "folder_id": "folder-123"}
 
         # Execute
-        result = await docs_tools.create_document(params)
+        result = docs_tools.create_document(params)
 
         # Verify
         assert result["documentId"] == "test-doc-id"
@@ -146,7 +146,7 @@ class TestGoogleDocsTools:
         }
 
         # Execute
-        result = await docs_tools.create_document(params)
+        result = docs_tools.create_document(params)
 
         # Verify basic functionality
         assert result["documentId"] == "test-doc-id"
@@ -185,7 +185,7 @@ class TestGoogleDocsTools:
 
         params = {"document_id": "doc-123", "content": "New content"}
 
-        result = await docs_tools.update_document(params)
+        result = docs_tools.update_document(params)
 
         assert result["documentId"] == "doc-123"
         assert "replies" in result
@@ -218,7 +218,7 @@ class TestGoogleDocsTools:
 
         params = {"document_id": "doc-456", "content": "Inserted text", "index": 5}
 
-        result = await docs_tools.update_document(params)
+        result = docs_tools.update_document(params)
 
         assert result["documentId"] == "doc-456"
 
@@ -254,7 +254,7 @@ class TestGoogleDocsTools:
             "replace_all": True,
         }
 
-        result = await docs_tools.update_document(params)
+        result = docs_tools.update_document(params)
 
         assert result["documentId"] == "doc-789"
         assert "replies" in result
@@ -276,7 +276,7 @@ class TestGoogleDocsTools:
         params = {"title": "Test Document"}
 
         with pytest.raises(HttpError):
-            await docs_tools.create_document(params)
+            docs_tools.create_document(params)
 
     @pytest.mark.asyncio
     @patch("tools.docs.build")
@@ -295,4 +295,4 @@ class TestGoogleDocsTools:
         params = {"document_id": "nonexistent", "content": "New content"}
 
         with pytest.raises(HttpError):
-            await docs_tools.update_document(params)
+            docs_tools.update_document(params)

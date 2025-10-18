@@ -210,7 +210,7 @@ class GoogleCalendarTools:
 
         return metadata_section.rstrip()
 
-    async def create_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def create_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new calendar event.
 
         Args:
@@ -307,7 +307,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error creating event: {e}")
             raise
 
-    async def update_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def update_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Update an existing calendar event.
 
         Args:
@@ -414,7 +414,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error updating event: {e}")
             raise
 
-    async def delete_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def delete_event(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Delete a calendar event.
 
         Args:
@@ -448,7 +448,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error deleting event: {e}")
             raise
 
-    async def list_calendars(self) -> Dict[str, Any]:
+    def list_calendars(self) -> Dict[str, Any]:
         """List all available calendars.
 
         Returns:
@@ -483,7 +483,7 @@ class GoogleCalendarTools:
             logger.error(f"Unexpected error listing calendars: {e}")
             raise
 
-    async def list_events(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def list_events(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """List calendar events.
 
         Args:

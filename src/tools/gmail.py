@@ -63,7 +63,7 @@ class GmailTools:
 
         return message
 
-    async def send_email(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def send_email(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Send an email.
 
         Args:
@@ -113,7 +113,7 @@ class GmailTools:
             logger.error(f"Unexpected error sending email: {e}")
             raise
 
-    async def search_emails(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def search_emails(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Search for emails.
 
         Args:
@@ -202,7 +202,7 @@ class GmailTools:
             logger.error(f"Unexpected error searching emails: {e}")
             raise
 
-    async def create_draft(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def create_draft(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create an email draft.
 
         Args:

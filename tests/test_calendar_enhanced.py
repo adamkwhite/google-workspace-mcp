@@ -48,7 +48,7 @@ class TestEnhancedCalendar:
         self.mock_auth_manager.get_credentials.return_value = Mock()
 
         # Call list_events
-        result = await self.calendar_tools.list_events({})
+        result = self.calendar_tools.list_events({})
 
         # Verify basic response structure
         assert "events" in result
@@ -119,7 +119,7 @@ class TestEnhancedCalendar:
         }
 
         # Call create_event
-        result = await self.calendar_tools.create_event(params)
+        result = self.calendar_tools.create_event(params)
 
         # Verify computed fields are added
         assert "computed" in result
@@ -167,7 +167,7 @@ class TestEnhancedCalendar:
         self.mock_auth_manager.get_credentials.return_value = Mock()
 
         # Call list_events
-        result = await self.calendar_tools.list_events({})
+        result = self.calendar_tools.list_events({})
 
         # Verify computed fields for multi-day event
         event = result["events"][0]
@@ -229,7 +229,7 @@ class TestEnhancedCalendar:
             "summary": "New Title",
         }
 
-        result = await self.calendar_tools.update_event(params)
+        result = self.calendar_tools.update_event(params)
 
         assert result["id"] == "event-123"
         assert result["summary"] == "New Title"
@@ -283,7 +283,7 @@ class TestEnhancedCalendar:
             "end_time": "2025-09-28T15:30:00-04:00",
         }
 
-        result = await self.calendar_tools.update_event(params)
+        result = self.calendar_tools.update_event(params)
 
         assert result["id"] == "event-456"
         assert result["start"]["dateTime"] == "2025-09-28T14:00:00-04:00"
@@ -339,7 +339,7 @@ class TestEnhancedCalendar:
             "attendees": ["alice@example.com", "bob@example.com"],
         }
 
-        result = await self.calendar_tools.update_event(params)
+        result = self.calendar_tools.update_event(params)
 
         assert result["id"] == "event-789"
         assert "computed" in result
@@ -357,7 +357,7 @@ class TestEnhancedCalendar:
 
         params = {"calendar_id": "primary", "event_id": "event-to-delete"}
 
-        result = await self.calendar_tools.delete_event(params)
+        result = self.calendar_tools.delete_event(params)
 
         assert result["success"] is True
         assert "deleted successfully" in result["message"]
@@ -386,7 +386,7 @@ class TestEnhancedCalendar:
         }
 
         with pytest.raises(HttpError):
-            await self.calendar_tools.update_event(params)
+            self.calendar_tools.update_event(params)
 
     @patch("tools.calendar.build")
     @pytest.mark.asyncio
@@ -407,7 +407,7 @@ class TestEnhancedCalendar:
         params = {"calendar_id": "primary", "event_id": "forbidden-event"}
 
         with pytest.raises(HttpError):
-            await self.calendar_tools.delete_event(params)
+            self.calendar_tools.delete_event(params)
 
     @patch("tools.calendar.build")
     @pytest.mark.asyncio
@@ -454,7 +454,7 @@ class TestEnhancedCalendar:
             },
         }
 
-        result = await self.calendar_tools.create_event(params)
+        result = self.calendar_tools.create_event(params)
 
         assert result["id"] == "event-with-metadata"
         assert "computed" in result
@@ -506,7 +506,7 @@ class TestEnhancedCalendar:
             },
         }
 
-        result = await self.calendar_tools.create_event(params)
+        result = self.calendar_tools.create_event(params)
 
         assert result["id"] == "event-partial-meta"
 

@@ -338,11 +338,11 @@ async def _handle_calendar_tool(name: str, arguments: dict) -> types.TextContent
     assert calendar_tools is not None, "Calendar tools not initialized"
 
     if name == "create_calendar_event":
-        result = await calendar_tools.create_event(arguments)
+        result = calendar_tools.create_event(arguments)
     elif name == "list_calendars":
-        result = await calendar_tools.list_calendars()
+        result = calendar_tools.list_calendars()
     else:  # list_calendar_events
-        result = await calendar_tools.list_events(arguments)
+        result = calendar_tools.list_events(arguments)
 
     return types.TextContent(type="text", text=str(result))
 
@@ -353,13 +353,13 @@ async def _handle_gmail_tool(name: str, arguments: dict) -> types.TextContent:
 
     if name == "send_email":
         logger.info(f"Processing send_email with arguments: {arguments}")
-        result = await gmail_tools.send_email(arguments)
+        result = gmail_tools.send_email(arguments)
         logger.info(f"Email send result: {result}")
     elif name == "search_emails":
-        result = await gmail_tools.search_emails(arguments)
+        result = gmail_tools.search_emails(arguments)
     else:  # create_email_draft
         logger.info(f"Processing create_email_draft with arguments: {arguments}")
-        result = await gmail_tools.create_draft(arguments)
+        result = gmail_tools.create_draft(arguments)
         logger.info(f"Email draft result: {result}")
 
     return types.TextContent(type="text", text=str(result))
@@ -370,9 +370,9 @@ async def _handle_docs_tool(name: str, arguments: dict) -> types.TextContent:
     assert docs_tools is not None, "Docs tools not initialized"
 
     if name == "create_google_doc":
-        result = await docs_tools.create_document(arguments)
+        result = docs_tools.create_document(arguments)
     else:  # update_google_doc
-        result = await docs_tools.update_document(arguments)
+        result = docs_tools.update_document(arguments)
 
     return types.TextContent(type="text", text=str(result))
 
