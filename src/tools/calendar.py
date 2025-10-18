@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional, TypedDict, cast
 from urllib.parse import urlparse
 
 from googleapiclient.discovery import build
@@ -16,6 +16,26 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.date_helpers import add_computed_fields  # noqa: E402
 
 logger = logging.getLogger(__name__)
+
+
+class EventMetadata(TypedDict, total=False):
+    """Metadata for calendar event traceability.
+
+    All fields are optional and provide context about where/when
+    the calendar event was created.
+
+    Attributes:
+        chat_title: Title of the chat/conversation (max 200 chars)
+        chat_url: URL to the chat/conversation (must be https://claude.ai/*)
+        project_name: Name of the associated project (max 100 chars)
+        created_date: Date when the event was created (ISO format: YYYY-MM-DD)
+    """
+
+    chat_title: str
+    chat_url: str
+    project_name: str
+    created_date: str
+
 
 # Default timezone constant
 DEFAULT_TIMEZONE = "America/Toronto"
@@ -133,7 +153,7 @@ class GoogleCalendarTools:
 
         return date_str
 
-    def _validate_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_metadata(self, metadata: Optional[EventMetadata]) -> EventMetadata:
         """Validate and sanitize metadata fields.
 
         CRITICAL: All metadata input must be raw, unescaped text to prevent
@@ -141,22 +161,22 @@ class GoogleCalendarTools:
         should be called every time metadata is provided, including updates.
 
         Args:
-            metadata: Dictionary with optional fields: chat_title, chat_url,
+            metadata: EventMetadata dictionary with optional fields: chat_title, chat_url,
                      project_name, created_date (all must be raw, unescaped)
 
         Returns:
-            Validated and sanitized metadata dictionary
+            Validated and sanitized EventMetadata dictionary
 
         Raises:
             ValueError: If any field fails validation
         """
         if not metadata:
-            return {}
+            return cast(EventMetadata, {})
 
         if not isinstance(metadata, dict):
             raise ValueError("metadata must be a dictionary")
 
-        validated = {}
+        validated: EventMetadata = {}
 
         if "chat_title" in metadata:
             validated["chat_title"] = self._validate_text_field(
@@ -178,11 +198,11 @@ class GoogleCalendarTools:
 
         return validated
 
-    def _format_metadata(self, metadata: Dict[str, Any]) -> str:
+    def _format_metadata(self, metadata: EventMetadata) -> str:
         """Format metadata into a description section.
 
         Args:
-            metadata: Dictionary with optional fields: created_date, project_name,
+            metadata: EventMetadata dictionary with optional fields: created_date, project_name,
                      chat_title, chat_url
 
         Returns:
@@ -223,7 +243,8 @@ class GoogleCalendarTools:
                 - location: Event location (optional)
                 - attendees: List of attendee emails (optional)
                 - timezone: Timezone (defaults to America/Toronto)
-                - metadata: Dict with chat_title, chat_url, project_name, created_date (optional)
+                - metadata: EventMetadata with chat_title, chat_url,
+                           project_name, created_date (optional)
 
         Returns:
             Dictionary with event information including ID and link
@@ -314,7 +335,7 @@ class GoogleCalendarTools:
             params: Dictionary containing:
                 - calendar_id: Calendar ID (required)
                 - event_id: Event ID to update (required)
-                - Other fields same as create_event (all optional)
+                - Other fields same as create_event (all optional, including EventMetadata)
 
         Returns:
             Dictionary with updated event information
