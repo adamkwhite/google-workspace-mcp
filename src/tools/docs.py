@@ -31,7 +31,7 @@ class GoogleDocsTools:
             self.drive_service = build("drive", "v3", credentials=creds)
         return self.drive_service
 
-    async def create_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def create_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new Google Doc.
 
         Args:
@@ -129,7 +129,7 @@ class GoogleDocsTools:
             logger.error(f"Unexpected error creating document: {e}")
             raise
 
-    async def update_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    def update_document(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Update an existing Google Doc.
 
         Args:

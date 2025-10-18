@@ -428,7 +428,7 @@ class TestUpdateEventValidation:
             },
         }
 
-        await self.calendar_tools.update_event(params)
+        self.calendar_tools.update_event(params)
 
         # Verify metadata was validated and added
         update_call = mock_service.events().update.call_args
@@ -459,7 +459,7 @@ class TestUpdateEventValidation:
         }
 
         # Should not raise - but XSS should be escaped
-        await self.calendar_tools.update_event(params)
+        self.calendar_tools.update_event(params)
 
         # Verify XSS was escaped
         update_call = mock_service.events().update.call_args
@@ -492,7 +492,7 @@ class TestUpdateEventValidation:
 
         # Should raise ValueError for malicious URL
         with pytest.raises(ValueError, match="chat_url must be from claude.ai domain"):
-            await self.calendar_tools.update_event(params)
+            self.calendar_tools.update_event(params)
 
     @patch("tools.calendar.build")
     @pytest.mark.asyncio
@@ -519,7 +519,7 @@ class TestUpdateEventValidation:
 
         # Should raise ValueError for HTTP URL
         with pytest.raises(ValueError, match="chat_url must use HTTPS protocol"):
-            await self.calendar_tools.update_event(params)
+            self.calendar_tools.update_event(params)
 
     @patch("tools.calendar.build")
     @pytest.mark.asyncio
@@ -548,7 +548,7 @@ class TestUpdateEventValidation:
         with pytest.raises(
             ValueError, match="created_date must be in ISO format \\(YYYY-MM-DD\\)"
         ):
-            await self.calendar_tools.update_event(params)
+            self.calendar_tools.update_event(params)
 
     @patch("tools.calendar.build")
     @pytest.mark.asyncio
@@ -583,7 +583,7 @@ class TestUpdateEventValidation:
         )
         mock_service.events().update().execute.return_value = first_updated
 
-        await self.calendar_tools.update_event(params_first)
+        self.calendar_tools.update_event(params_first)
 
         # Second update - simulate getting the already-updated event
         mock_service.events().get().execute.return_value = first_updated
@@ -597,7 +597,7 @@ class TestUpdateEventValidation:
             },
         }
 
-        await self.calendar_tools.update_event(params_second)
+        self.calendar_tools.update_event(params_second)
 
         # Verify second update call
         second_update_call = mock_service.events().update.call_args_list[1]
@@ -643,7 +643,7 @@ class TestUpdateEventValidation:
             },
         }
 
-        await self.calendar_tools.update_event(params)
+        self.calendar_tools.update_event(params)
 
         # Verify update call
         update_call = mock_service.events().update.call_args

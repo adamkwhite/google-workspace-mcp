@@ -111,7 +111,7 @@ class TestServerIntegration:
         ) as mock_calendar:
             mock_auth.get_enabled_services.return_value = ["calendar"]
             mock_auth.creds = Mock()
-            mock_calendar.create_event = AsyncMock(
+            mock_calendar.create_event = Mock(
                 return_value={"id": "event-123", "summary": "Test"}
             )
 
@@ -134,7 +134,7 @@ class TestServerIntegration:
         ) as mock_calendar:
             mock_auth.get_enabled_services.return_value = ["calendar"]
             mock_auth.creds = Mock()
-            mock_calendar.list_calendars = AsyncMock(
+            mock_calendar.list_calendars = Mock(
                 return_value={
                     "calendars": [{"id": "primary", "summary": "My Calendar"}]
                 }
@@ -151,7 +151,7 @@ class TestServerIntegration:
         ) as mock_calendar:
             mock_auth.get_enabled_services.return_value = ["calendar"]
             mock_auth.creds = Mock()
-            mock_calendar.list_events = AsyncMock(
+            mock_calendar.list_events = Mock(
                 return_value={"events": [{"id": "event-1", "summary": "Meeting"}]}
             )
 
@@ -166,7 +166,7 @@ class TestServerIntegration:
         ) as mock_gmail:
             mock_auth.get_enabled_services.return_value = ["gmail"]
             mock_auth.creds = Mock()
-            mock_gmail.send_email = AsyncMock(
+            mock_gmail.send_email = Mock(
                 return_value={"id": "msg-123", "to": "test@example.com"}
             )
 
@@ -183,7 +183,7 @@ class TestServerIntegration:
         ) as mock_gmail:
             mock_auth.get_enabled_services.return_value = ["gmail"]
             mock_auth.creds = Mock()
-            mock_gmail.search_emails = AsyncMock(
+            mock_gmail.search_emails = Mock(
                 return_value={
                     "messages": [{"id": "msg-1", "subject": "Test"}],
                     "count": 1,
@@ -203,7 +203,7 @@ class TestServerIntegration:
         ) as mock_gmail:
             mock_auth.get_enabled_services.return_value = ["gmail"]
             mock_auth.creds = Mock()
-            mock_gmail.create_draft = AsyncMock(
+            mock_gmail.create_draft = Mock(
                 return_value={"id": "draft-123", "subject": "Draft"}
             )
 
@@ -220,7 +220,7 @@ class TestServerIntegration:
         ) as mock_docs:
             mock_auth.get_enabled_services.return_value = ["docs"]
             mock_auth.creds = Mock()
-            mock_docs.create_document = AsyncMock(
+            mock_docs.create_document = Mock(
                 return_value={"documentId": "doc-123", "title": "Test"}
             )
 
@@ -237,7 +237,7 @@ class TestServerIntegration:
         ) as mock_docs:
             mock_auth.get_enabled_services.return_value = ["docs"]
             mock_auth.creds = Mock()
-            mock_docs.update_document = AsyncMock(
+            mock_docs.update_document = Mock(
                 return_value={"documentId": "doc-123", "replies": []}
             )
 
@@ -256,7 +256,7 @@ class TestServerIntegration:
             mock_auth.get_enabled_services.return_value = ["calendar"]
             mock_auth.creds = None  # Not initialized
             mock_auth.initialize = AsyncMock()
-            mock_calendar.create_event = AsyncMock(
+            mock_calendar.create_event = Mock(
                 return_value={"id": "event-123", "summary": "Test"}
             )
 

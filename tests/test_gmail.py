@@ -48,7 +48,7 @@ class TestGmailTools:
         }
 
         # Execute
-        result = await gmail_tools.send_email(params)
+        result = gmail_tools.send_email(params)
 
         # Verify
         assert result["id"] == "msg-123"
@@ -72,7 +72,7 @@ class TestGmailTools:
             "bcc": ["bcc1@example.com", "bcc2@example.com"],
         }
 
-        result = await gmail_tools.send_email(params)
+        result = gmail_tools.send_email(params)
         assert result["id"] == "msg-123"
 
     @pytest.mark.asyncio
@@ -92,7 +92,7 @@ class TestGmailTools:
             "html": True,
         }
 
-        result = await gmail_tools.send_email(params)
+        result = gmail_tools.send_email(params)
         assert result["id"] == "msg-123"
 
     @pytest.mark.asyncio
@@ -128,7 +128,7 @@ class TestGmailTools:
 
         params = {"query": "from:sender@example.com", "max_results": 10}
 
-        result = await gmail_tools.search_emails(params)
+        result = gmail_tools.search_emails(params)
 
         assert "messages" in result
         assert len(result["messages"]) == 2
@@ -160,7 +160,7 @@ class TestGmailTools:
 
         params = {"query": "test", "include_body": True}
 
-        result = await gmail_tools.search_emails(params)
+        result = gmail_tools.search_emails(params)
         assert len(result["messages"]) == 1
 
     @pytest.mark.asyncio
@@ -184,7 +184,7 @@ class TestGmailTools:
             "body": "Draft body",
         }
 
-        result = await gmail_tools.create_draft(params)
+        result = gmail_tools.create_draft(params)
 
         assert result["id"] == "draft-123"
         assert result["message"]["id"] == "msg-123"
@@ -209,7 +209,7 @@ class TestGmailTools:
             "bcc": "bcc@example.com",
         }
 
-        result = await gmail_tools.create_draft(params)
+        result = gmail_tools.create_draft(params)
         assert result["id"] == "draft-123"
 
     @pytest.mark.asyncio
@@ -233,7 +233,7 @@ class TestGmailTools:
         }
 
         with pytest.raises(HttpError):
-            await gmail_tools.send_email(params)
+            gmail_tools.send_email(params)
 
     @pytest.mark.asyncio
     @patch("tools.gmail.build")
@@ -252,7 +252,7 @@ class TestGmailTools:
         params = {"query": "test"}
 
         with pytest.raises(HttpError):
-            await gmail_tools.search_emails(params)
+            gmail_tools.search_emails(params)
 
     @pytest.mark.asyncio
     @patch("tools.gmail.build")
@@ -275,4 +275,4 @@ class TestGmailTools:
         }
 
         with pytest.raises(HttpError):
-            await gmail_tools.create_draft(params)
+            gmail_tools.create_draft(params)
