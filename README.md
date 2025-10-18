@@ -4,12 +4,12 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 
 ## Code Quality
 
-[![Quality Gate Status](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=alert_status)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
-[![Bugs](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=bugs)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
-[![Code Coverage](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=coverage)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
-[![Reliability Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=reliability_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
-[![Security Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=security_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
-[![Maintainability Rating](http://44.206.255.230:9000/api/project_badges/measure?project=Google-Workspace-MCP&metric=sqale_rating)](http://44.206.255.230:9000/dashboard?id=Google-Workspace-MCP)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=bugs)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Code Coverage](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=coverage)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
 
 ## 🔧 User-Configurable Services
 

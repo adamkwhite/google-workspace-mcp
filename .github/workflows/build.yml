@@ -45,9 +45,9 @@ jobs:
         run: |
           mypy src --ignore-missing-imports
 
-  # Stage 2: Tests and SonarQube analysis (2-3 minutes)
-  sonarqube:
-    name: Tests & SonarQube Analysis
+  # Stage 2: Tests and SonarCloud analysis (2-3 minutes)
+  sonarcloud:
+    name: Tests & SonarCloud Analysis
     needs: quick-checks  # Only run if quick checks pass
     runs-on: ubuntu-latest
 
@@ -69,15 +69,14 @@ jobs:
         run: |
          PYTHONPATH=. python -m pytest tests/ --cov=src --cov-report=xml --cov-report=term
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      - name: SonarQube Quality Gate Check
+      - name: SonarCloud Quality Gate Check
         uses: SonarSource/sonarqube-quality-gate-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         timeout-minutes: 5
