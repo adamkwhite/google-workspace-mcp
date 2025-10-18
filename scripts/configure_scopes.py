@@ -5,10 +5,10 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, Set
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from utils.scope_manager import ScopeManager
 
@@ -41,62 +41,66 @@ class ScopeConfigurator:
         print(f"File exists: {'✅' if config_summary['config_exists'] else '❌'}")
         print(f"Configuration valid: {'✅' if config_summary['is_valid'] else '❌'}")
 
-        if not config_summary['is_valid']:
+        if not config_summary["is_valid"]:
             print("❌ Configuration errors:")
-            for error in config_summary['errors']:
+            for error in config_summary["errors"]:
                 print(f"   • {error}")
 
         print()
         print("Enabled services:")
-        for service in config_summary['enabled_services']:
-            description = config_summary['service_descriptions'].get(service, '')
+        for service in config_summary["enabled_services"]:
+            description = config_summary["service_descriptions"].get(service, "")
             print(f"   ✅ {service}: {description}")
 
         print()
         print("Required scopes:")
-        for scope in config_summary['required_scopes']:
+        for scope in config_summary["required_scopes"]:
             print(f"   • {scope}")
         print()
 
     def display_available_services(self) -> Dict[str, Dict]:
         """Display available services and return service info."""
         services = {
-            'calendar': {
-                'name': 'Google Calendar',
-                'description': 'Create, view, and manage calendar events',
-                'dependencies': []
+            "calendar": {
+                "name": "Google Calendar",
+                "description": "Create, view, and manage calendar events",
+                "dependencies": [],
             },
-            'gmail': {
-                'name': 'Gmail',
-                'description': 'Send, read, and manage email messages',
-                'dependencies': []
+            "gmail": {
+                "name": "Gmail",
+                "description": "Send, read, and manage email messages",
+                "dependencies": [],
             },
-            'docs': {
-                'name': 'Google Docs',
-                'description': 'Create and edit Google Documents',
-                'dependencies': ['drive']
+            "docs": {
+                "name": "Google Docs",
+                "description": "Create and edit Google Documents",
+                "dependencies": ["drive"],
             },
-            'sheets': {
-                'name': 'Google Sheets',
-                'description': 'Create and edit Google Spreadsheets (Coming Soon)',
-                'dependencies': ['drive']
+            "sheets": {
+                "name": "Google Sheets",
+                "description": "Create and edit Google Spreadsheets (Coming Soon)",
+                "dependencies": ["drive"],
             },
-            'slides': {
-                'name': 'Google Slides',
-                'description': 'Create and edit Google Presentations (Coming Soon)',
-                'dependencies': ['drive']
+            "slides": {
+                "name": "Google Slides",
+                "description": "Create and edit Google Presentations (Coming Soon)",
+                "dependencies": ["drive"],
             },
-            'drive': {
-                'name': 'Google Drive',
-                'description': 'Access Google Drive files (required for Docs/Sheets/Slides)',
-                'dependencies': []
-            }
+            "drive": {
+                "name": "Google Drive",
+                "description": "Access Google Drive files (required for Docs/Sheets/Slides)",
+                "dependencies": [],
+            },
         }
 
         print("📝 Available Services:")
         print("-" * 20)
         for service_id, info in services.items():
-            deps = f" (requires: {', '.join(info['dependencies'])})" if info['dependencies'] else ""
+            deps = (
+                f" (requires: {', '.join(info['dependencies'])})"
+                if info["dependencies"]
+                else ""
+            )
             print(f"   {service_id}: {info['name']} - {info['description']}{deps}")
         print()
 
@@ -108,9 +112,11 @@ class ScopeConfigurator:
 
         print("🔧 Service Selection:")
         print("-" * 18)
-        print("Enter services to enable (space-separated), or 'default' for recommended:")
+        print(
+            "Enter services to enable (space-separated), or 'default' for recommended:"
+        )
         print(f"Current: {' '.join(sorted(current_enabled))}")
-        print(f"Recommended: calendar gmail docs drive")
+        print("Recommended: calendar gmail docs drive")
         print(f"Available: {' '.join(sorted(available_services.keys()))}")
         print()
 
@@ -122,7 +128,7 @@ class ScopeConfigurator:
                 continue
 
             if user_input == "default":
-                selected = {'calendar', 'gmail', 'docs', 'drive'}
+                selected = {"calendar", "gmail", "docs", "drive"}
                 break
 
             # Parse space-separated services
@@ -139,13 +145,15 @@ class ScopeConfigurator:
 
         return selected
 
-    def validate_dependencies(self, selected: Set[str], available_services: Dict) -> Set[str]:
+    def validate_dependencies(
+        self, selected: Set[str], available_services: Dict
+    ) -> Set[str]:
         """Validate and add required dependencies."""
         final_selection = set(selected)
         added_deps = set()
 
         for service in selected:
-            deps = available_services[service]['dependencies']
+            deps = available_services[service]["dependencies"]
             for dep in deps:
                 if dep not in final_selection:
                     final_selection.add(dep)
@@ -170,9 +178,9 @@ class ScopeConfigurator:
 
         while True:
             confirm = input("Confirm this configuration? (y/n): ").strip().lower()
-            if confirm in ['y', 'yes']:
+            if confirm in ["y", "yes"]:
                 return True
-            elif confirm in ['n', 'no']:
+            elif confirm in ["n", "no"]:
                 return False
             else:
                 print("❌ Please enter 'y' or 'n'")
@@ -182,22 +190,22 @@ class ScopeConfigurator:
         try:
             # Get current config or use default
             if self.config_path.exists():
-                with open(self.config_path, 'r') as f:
+                with open(self.config_path, "r") as f:
                     config = json.load(f)
             else:
                 config = self.scope_manager._get_default_config()
 
             # Update enabled services
-            config['enabled_services'] = {
+            config["enabled_services"] = {
                 service: service in enabled_services
-                for service in config['enabled_services'].keys()
+                for service in config["enabled_services"].keys()
             }
 
             # Ensure config directory exists
             self.config_path.parent.mkdir(exist_ok=True)
 
             # Save config
-            with open(self.config_path, 'w') as f:
+            with open(self.config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
             print(f"✅ Configuration saved to {self.config_path}")
@@ -219,8 +227,10 @@ class ScopeConfigurator:
             print("Delete existing authentication token?")
 
             while True:
-                cleanup = input("Delete token to force re-auth? (y/n): ").strip().lower()
-                if cleanup in ['y', 'yes']:
+                cleanup = (
+                    input("Delete token to force re-auth? (y/n): ").strip().lower()
+                )
+                if cleanup in ["y", "yes"]:
                     try:
                         token_path.unlink()
                         print(f"✅ Deleted {token_path}")
@@ -228,7 +238,7 @@ class ScopeConfigurator:
                     except Exception as e:
                         print(f"❌ Failed to delete token: {e}")
                     break
-                elif cleanup in ['n', 'no']:
+                elif cleanup in ["n", "no"]:
                     print("   Token kept - you may need to manually delete it later")
                     break
                 else:
@@ -242,7 +252,9 @@ class ScopeConfigurator:
 
             available_services = self.display_available_services()
             selected_services = self.get_user_selection(available_services)
-            final_services = self.validate_dependencies(selected_services, available_services)
+            final_services = self.validate_dependencies(
+                selected_services, available_services
+            )
 
             if self.confirm_selection(final_services, available_services):
                 if self.save_configuration(final_services):
