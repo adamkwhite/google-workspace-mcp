@@ -6,6 +6,7 @@ import pickle
 from pathlib import Path
 from typing import List, Optional
 
+import aiofiles
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
@@ -55,8 +56,9 @@ class GoogleAuthManager:
         needs_reauth = False
         if os.path.exists(self.token_path):
             logger.info("Loading existing credentials...")
-            with open(self.token_path, "rb") as token:
-                self.creds = pickle.load(token)
+            async with aiofiles.open(self.token_path, "rb") as token:
+                content = await token.read()
+                self.creds = pickle.loads(content)
 
             # Check if scopes have changed
             if hasattr(self.creds, "scopes") and self.creds.scopes:
@@ -82,8 +84,8 @@ class GoogleAuthManager:
 
             # Save credentials for next run
             self.token_path.parent.mkdir(exist_ok=True)
-            with open(self.token_path, "wb") as token:
-                pickle.dump(self.creds, token)
+            async with aiofiles.open(self.token_path, "wb") as token:
+                await token.write(pickle.dumps(self.creds))
 
         logger.info("Authentication successful!")
 
