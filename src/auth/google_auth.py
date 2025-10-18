@@ -80,7 +80,7 @@ class GoogleAuthManager:
                 self.creds.refresh(Request())
             else:
                 logger.info("Initiating new authentication flow...")
-                await self._authenticate()
+                self._authenticate()
 
             # Save credentials for next run
             self.token_path.parent.mkdir(exist_ok=True)
@@ -89,7 +89,7 @@ class GoogleAuthManager:
 
         logger.info("Authentication successful!")
 
-    async def _authenticate(self):
+    def _authenticate(self):
         """Perform OAuth2 authentication flow."""
         required_scopes = self.scope_manager.get_required_scopes()
 
