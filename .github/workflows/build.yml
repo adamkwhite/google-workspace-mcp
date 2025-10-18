@@ -27,7 +27,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install flake8 mypy black isort
+          pip install flake8 mypy black isort types-aiofiles
 
       - name: Check code formatting (Black)
         run: |
