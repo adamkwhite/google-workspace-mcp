@@ -23,10 +23,14 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 
 ### 📅 **Google Calendar**
 - Create events with enhanced day-of-week calculations
+- **🎉 NEW**: Smart holiday detection and scheduling
+  - Automatically prevents scheduling on US and Canadian holidays
+  - Suggests alternative working days when holidays detected
+  - Optional force_holiday_booking parameter to override
 - List calendars and events with **computed day-of-week information**
 - Manage attendees and send invitations
 - Search events by date or keywords
-- **🎯 NEW**: Enhanced responses include accurate day-of-week, duration, and date calculations
+- Enhanced responses include accurate day-of-week, duration, and date calculations
 
 ### ✉️ **Gmail**
 - Send emails with HTML support
@@ -158,6 +162,8 @@ Calendar events now include computed fields that eliminate day-of-week calculati
 ### Calendar Management
 ```
 "Schedule a team meeting tomorrow at 2 PM for 1 hour with john@example.com and jane@example.com"
+"Schedule a planning session next week" (automatically avoids holidays)
+"Book a meeting on December 25th" (prompts: "This is Christmas. Continue? y/n")
 "Show me all meetings this week with day-of-week information"
 "List my calendar events for next Monday"
 "Search for events with 'project review' in the title"

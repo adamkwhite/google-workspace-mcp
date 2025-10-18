@@ -163,6 +163,14 @@ async def handle_list_tools() -> list[types.Tool]:
                                     },
                                 },
                             },
+                            "force_holiday_booking": {
+                                "type": "boolean",
+                                "description": (
+                                    "Allow booking on holidays. Set to true to bypass "
+                                    "holiday warnings (default: false)"
+                                ),
+                                "default": False,
+                            },
                         },
                         "required": ["summary", "start_time", "end_time"],
                     },

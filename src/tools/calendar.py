@@ -14,6 +14,12 @@ from googleapiclient.errors import HttpError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.date_helpers import add_computed_fields  # noqa: E402
+from utils.holiday_helpers import (  # noqa: E402
+    get_holiday_name,
+    is_holiday,
+    parse_date_from_iso,
+    suggest_alternative_date,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -245,12 +251,40 @@ class GoogleCalendarTools:
                 - timezone: Timezone (defaults to America/Toronto)
                 - metadata: EventMetadata with chat_title, chat_url,
                            project_name, created_date (optional)
+                - force_holiday_booking: Allow booking on holidays (default: False)
 
         Returns:
             Dictionary with event information including ID and link
+
+        Raises:
+            ValueError: If the date is a holiday and force_holiday_booking is False
         """
         try:
             calendar_id = params.get("calendar_id", "primary")
+            force_holiday = params.get("force_holiday_booking", False)
+
+            # Check if start date is a holiday
+            start_date = parse_date_from_iso(params["start_time"])
+            if is_holiday(start_date) and not force_holiday:
+                holiday_name = get_holiday_name(start_date)
+                alternative_date = suggest_alternative_date(start_date)
+
+                error_msg = (
+                    f"The requested date ({start_date}) is a holiday: {holiday_name}. "
+                )
+
+                if alternative_date:
+                    error_msg += (
+                        f"Consider scheduling on {alternative_date} "
+                        f"({alternative_date.strftime('%A')}) instead. "
+                    )
+
+                error_msg += (
+                    "To book on this holiday anyway, "
+                    "set force_holiday_booking=true in the request."
+                )
+
+                raise ValueError(error_msg)
 
             # Build event data
             event_data = {
