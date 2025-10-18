@@ -1,0 +1,27 @@
+# Ruff configuration - replaces flake8 and isort
+# https://docs.astral.sh/ruff/
+
+# General configuration
+line-length = 100
+
+# Linting rules
+[lint]
+# Enable rules
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "W",   # pycodestyle warnings
+]
+
+# Ignore specific rules to match previous flake8 config
+ignore = [
+    "E203",  # Whitespace before ':' (conflicts with Black)
+]
+
+# Import sorting configuration (isort replacement)
+# Black-compatible settings
+[lint.isort]
+force-single-line = false
+force-wrap-aliases = false
+split-on-trailing-comma = true
