@@ -27,19 +27,15 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install flake8 mypy black isort types-aiofiles
+          pip install ruff mypy black types-aiofiles
 
       - name: Check code formatting (Black)
         run: |
           black --check src/ tests/ || (echo "❌ Code formatting issues found. Run 'black src/ tests/' to fix." && exit 1)
 
-      - name: Check import sorting (isort)
+      - name: Lint and check imports (Ruff)
         run: |
-          isort --profile black --check-only src/ tests/ || (echo "❌ Import sorting issues found. Run 'isort --profile black src/ tests/' to fix." && exit 1)
-
-      - name: Lint code (Flake8)
-        run: |
-          flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+          ruff check src/ tests/ || (echo "❌ Linting or import issues found. Run 'ruff check --fix src/ tests/' to fix." && exit 1)
 
       - name: Type checking (Mypy)
         run: |
