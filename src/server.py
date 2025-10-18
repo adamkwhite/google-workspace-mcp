@@ -333,7 +333,7 @@ async def handle_list_resources() -> list[types.Resource]:
     return []
 
 
-async def _handle_calendar_tool(name: str, arguments: dict) -> types.TextContent:
+def _handle_calendar_tool(name: str, arguments: dict) -> types.TextContent:
     """Handle calendar tool calls."""
     assert calendar_tools is not None, "Calendar tools not initialized"
 
@@ -347,7 +347,7 @@ async def _handle_calendar_tool(name: str, arguments: dict) -> types.TextContent
     return types.TextContent(type="text", text=str(result))
 
 
-async def _handle_gmail_tool(name: str, arguments: dict) -> types.TextContent:
+def _handle_gmail_tool(name: str, arguments: dict) -> types.TextContent:
     """Handle Gmail tool calls."""
     assert gmail_tools is not None, "Gmail tools not initialized"
 
@@ -365,7 +365,7 @@ async def _handle_gmail_tool(name: str, arguments: dict) -> types.TextContent:
     return types.TextContent(type="text", text=str(result))
 
 
-async def _handle_docs_tool(name: str, arguments: dict) -> types.TextContent:
+def _handle_docs_tool(name: str, arguments: dict) -> types.TextContent:
     """Handle Docs tool calls."""
     assert docs_tools is not None, "Docs tools not initialized"
 
@@ -412,17 +412,17 @@ async def handle_call_tool(name: str, arguments: dict) -> list[types.TextContent
         # Calendar tools
         if name in ["create_calendar_event", "list_calendars", "list_calendar_events"]:
             check_service_enabled("calendar", name)
-            return [await _handle_calendar_tool(name, arguments)]
+            return [_handle_calendar_tool(name, arguments)]
 
         # Gmail tools
         elif name in ["send_email", "search_emails", "create_email_draft"]:
             check_service_enabled("gmail", name)
-            return [await _handle_gmail_tool(name, arguments)]
+            return [_handle_gmail_tool(name, arguments)]
 
         # Google Docs tools
         elif name in ["create_google_doc", "update_google_doc"]:
             check_service_enabled("docs", name)
-            return [await _handle_docs_tool(name, arguments)]
+            return [_handle_docs_tool(name, arguments)]
 
         else:
             logger.error(f"=== UNKNOWN TOOL: {name} ===")
