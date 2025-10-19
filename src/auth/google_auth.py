@@ -58,7 +58,9 @@ class GoogleAuthManager:
             logger.info("Loading existing credentials...")
             async with aiofiles.open(self.token_path, "rb") as token:
                 content = await token.read()
-                self.creds = pickle.loads(content)
+                # nosec B301 - Loading OAuth token from local file created by this application
+                # This is not deserializing untrusted external data
+                self.creds = pickle.loads(content)  # nosec B301
 
             # Check if scopes have changed
             if hasattr(self.creds, "scopes") and self.creds.scopes:
