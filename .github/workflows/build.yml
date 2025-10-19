@@ -35,7 +35,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install ruff mypy black types-aiofiles
+          pip install ruff mypy black types-aiofiles bandit
 
       - name: Check code formatting (Black)
         run: |
@@ -48,6 +48,10 @@ jobs:
       - name: Type checking (Mypy)
         run: |
           mypy src --ignore-missing-imports
+
+      - name: Security scan (Bandit)
+        run: |
+          bandit -r src/ tests/ scripts/ -ll || (echo "❌ Security issues found. Review bandit output above." && exit 1)
 
   # Stage 2: Tests and SonarCloud analysis (2-3 minutes)
   sonarcloud:
