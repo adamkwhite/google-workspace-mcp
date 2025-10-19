@@ -92,7 +92,22 @@ else
     echo -e "  ${YELLOW}Bandit not installed, skipping security scan${NC}"
 fi
 
-# 5. Import sorting handled by Ruff (included in step 2)
+# 5. Secret scanning with gitleaks
+GITLEAKS_PATH="${HOME}/bin/gitleaks"
+if [ -f "$GITLEAKS_PATH" ] || command -v gitleaks &> /dev/null; then
+    # Use local install if available, otherwise system install
+    if [ -f "$GITLEAKS_PATH" ]; then
+        GITLEAKS_CMD="$GITLEAKS_PATH"
+    else
+        GITLEAKS_CMD="gitleaks"
+    fi
+
+    run_check "Gitleaks secret scan" "$GITLEAKS_CMD protect --staged --redact --verbose"
+else
+    echo -e "  ${YELLOW}Gitleaks not installed, skipping secret scan${NC}"
+fi
+
+# 6. Import sorting handled by Ruff (included in step 2)
 
 # Final result
 echo ""

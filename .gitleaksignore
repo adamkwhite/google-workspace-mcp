@@ -1,0 +1,8 @@
+# Gitleaks ignore file
+# Format: <commit-sha>:<file>:<rule-id>:<line>
+
+# Documentation of security incident (credentials already revoked)
+# This file documents the BFG cleanup process and contains the old exposed secret
+# as part of the incident response documentation - this is intentional and safe
+75393564474d5702ba4219fe08569a8360513a02:docs/security/git-history-cleanup-2025-10-18.md:generic-api-key:13
+0e55f01c2575033261d4871310ae9488a75abfe6:docs/security/git-history-cleanup-2025-10-18.md:generic-api-key:13
