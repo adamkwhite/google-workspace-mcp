@@ -1,7 +1,11 @@
 # Google Workspace MCP Server Requirements
 
 # MCP Framework
-mcp>=0.1.0
+mcp>=1.22.0
+
+# Security: Pin starlette to patched version (CVE-2025-62727)
+# https://github.com/advisories/GHSA-7f5h-v6xp-fcq8
+starlette>=0.49.1
 
 # Google API Client Libraries
 google-api-python-client>=2.88.0
