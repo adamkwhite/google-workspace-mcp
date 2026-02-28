@@ -2,14 +2,12 @@
 
 A configurable Model Context Protocol (MCP) server that enables Claude to manage your Google Workspace services. **Choose which services to enable** - Calendar, Gmail, Docs, or any combination. Works with regular Gmail accounts - no Google Workspace subscription required!
 
-## Code Quality
-
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=bugs)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
-[![Code Coverage](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=coverage)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=coverage)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=adamkwhite_google-workspace-mcp&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=adamkwhite_google-workspace-mcp)
 
 ## 🔧 User-Configurable Services
 
@@ -37,6 +35,10 @@ A configurable Model Context Protocol (MCP) server that enables Claude to manage
 - Search emails with Gmail's powerful query syntax
 - Create drafts for later editing
 - Support for CC/BCC recipients
+- **🎯 NEW**: Label-based access restriction
+  - Optional filtering to restrict access to emails with specific label (e.g., "Jobs")
+  - When enabled: search_emails filters automatically, send/draft operations blocked
+  - Configurable via interactive setup or config/scopes.json
 
 ### 📄 **Google Docs**
 - Create documents with initial content
@@ -214,9 +216,44 @@ Edit `config/scopes.json` directly:
     "gmail": false,    # Disable Gmail
     "docs": true,      # Enable Google Docs
     "drive": true      # Auto-enabled (required for Docs)
+  },
+  "gmail_settings": {
+    "restricted_label": "Jobs"  # Optional: Restrict Gmail to specific label
   }
 }
 ```
+
+### Gmail Label Filtering
+
+Restrict Gmail operations to emails with a specific label:
+
+**Configuration**:
+```json
+{
+  "enabled_services": {
+    "gmail": true
+  },
+  "gmail_settings": {
+    "restricted_label": "Jobs"
+  }
+}
+```
+
+**Behavior**:
+- ✅ **search_emails**: Automatically filters to only show emails with "Jobs" label
+- 🚫 **send_email**: Blocked with clear error message
+- 🚫 **create_email_draft**: Blocked with clear error message
+
+**Use Cases**:
+- Job search: Only access emails related to job applications
+- Client communications: Restrict to specific client label
+- Privacy: Limit AI access to subset of emails
+
+**Setup**:
+1. Create label in Gmail (e.g., "Jobs")
+2. Run `python scripts/configure_scopes.py` and enable Gmail label filtering
+3. Or manually add `gmail_settings` to `config/scopes.json`
+4. Restart MCP server
 
 ### Checking Configuration
 In Claude, use: `get_mcp_configuration` to see:
