@@ -16,9 +16,37 @@ def mock_auth_manager():
 
 
 @pytest.fixture
+def mock_scope_manager():
+    """Create a mock scope manager."""
+    scope_manager = Mock()
+    scope_manager.get_restricted_label.return_value = None
+    return scope_manager
+
+
+@pytest.fixture
+def mock_scope_manager_with_restriction():
+    """Create a mock scope manager with label restriction."""
+    scope_manager = Mock()
+    scope_manager.get_restricted_label.return_value = "Jobs"
+    return scope_manager
+
+
+@pytest.fixture
 def gmail_tools(mock_auth_manager):
     """Create GmailTools instance with mocked auth."""
     return GmailTools(mock_auth_manager)
+
+
+@pytest.fixture
+def gmail_tools_with_scope(mock_auth_manager, mock_scope_manager):
+    """Create GmailTools instance with scope manager."""
+    return GmailTools(mock_auth_manager, mock_scope_manager)
+
+
+@pytest.fixture
+def gmail_tools_restricted(mock_auth_manager, mock_scope_manager_with_restriction):
+    """Create GmailTools instance with label restriction."""
+    return GmailTools(mock_auth_manager, mock_scope_manager_with_restriction)
 
 
 class TestGmailTools:
@@ -276,3 +304,267 @@ class TestGmailTools:
 
         with pytest.raises(HttpError):
             gmail_tools.create_draft(params)
+
+
+class TestGmailLabelFiltering:
+    """Test cases for Gmail label-based access restriction."""
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_label_initialization_success(
+        self, mock_build, gmail_tools_restricted
+    ):
+        """Test successful label resolution."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {
+            "labels": [
+                {"id": "Label_1", "name": "Jobs"},
+                {"id": "Label_2", "name": "Personal"},
+                {"id": "INBOX", "name": "INBOX"},
+            ]
+        }
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        # Mock search response
+        mock_list_response = {"messages": []}
+        mock_service.users().messages().list().execute.return_value = mock_list_response
+
+        # Execute search to trigger label initialization
+        gmail_tools_restricted.search_emails({"query": "test"})
+
+        # Verify label was resolved
+        assert gmail_tools_restricted._restricted_label_id == "Label_1"
+        assert gmail_tools_restricted._label_initialized is True
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_label_not_found_error(self, mock_build, gmail_tools_restricted):
+        """Test error when configured label doesn't exist."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response without "Jobs" label
+        mock_labels_response = {
+            "labels": [
+                {"id": "Label_2", "name": "Personal"},
+                {"id": "INBOX", "name": "INBOX"},
+            ]
+        }
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        # Execute search to trigger label initialization
+        with pytest.raises(ValueError) as exc_info:
+            gmail_tools_restricted.search_emails({"query": "test"})
+
+        assert "Configured Gmail label 'Jobs' not found" in str(exc_info.value)
+        assert "Available labels:" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_no_restriction_configured(self, mock_build, gmail_tools_with_scope):
+        """Test normal operation when no restriction is configured."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock search response
+        mock_list_response = {"messages": []}
+        mock_service.users().messages().list().execute.return_value = mock_list_response
+
+        # Execute search
+        gmail_tools_with_scope.search_emails({"query": "test"})
+
+        # Verify no label filtering applied
+        assert gmail_tools_with_scope._restricted_label_id is None
+        assert gmail_tools_with_scope._label_initialized is True
+
+        # Verify query passed through unchanged
+        call_args = mock_service.users().messages().list.call_args
+        assert call_args[1]["q"] == "test"
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_label_caching(self, mock_build, gmail_tools_restricted):
+        """Test that labels are cached and not fetched repeatedly."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {
+            "labels": [
+                {"id": "Label_1", "name": "Jobs"},
+            ]
+        }
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        # Mock search response
+        mock_list_response = {"messages": []}
+        mock_service.users().messages().list().execute.return_value = mock_list_response
+
+        # Execute search twice
+        gmail_tools_restricted.search_emails({"query": "test1"})
+        gmail_tools_restricted.search_emails({"query": "test2"})
+
+        # Verify labels.list() was called only once
+        assert mock_service.users().labels().list().execute.call_count == 1
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_search_query_enhancement_with_restriction(
+        self, mock_build, gmail_tools_restricted
+    ):
+        """Test that search query is enhanced with label filter."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {"labels": [{"id": "Label_1", "name": "Jobs"}]}
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        # Mock search response
+        mock_list_response = {"messages": []}
+        mock_service.users().messages().list().execute.return_value = mock_list_response
+
+        # Execute search with query
+        gmail_tools_restricted.search_emails({"query": "from:example@example.com"})
+
+        # Verify query was enhanced with label filter
+        call_args = mock_service.users().messages().list.call_args
+        assert call_args[1]["q"] == "from:example@example.com label:Jobs"
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_search_empty_query_becomes_label_filter(
+        self, mock_build, gmail_tools_restricted
+    ):
+        """Test that empty query becomes just the label filter."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {"labels": [{"id": "Label_1", "name": "Jobs"}]}
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        # Mock search response
+        mock_list_response = {"messages": []}
+        mock_service.users().messages().list().execute.return_value = mock_list_response
+
+        # Execute search with empty query
+        gmail_tools_restricted.search_emails({"query": ""})
+
+        # Verify query is just the label filter
+        call_args = mock_service.users().messages().list.call_args
+        assert call_args[1]["q"] == "label:Jobs"
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_send_email_blocked_with_restriction(
+        self, mock_build, gmail_tools_restricted
+    ):
+        """Test that send_email is blocked when restriction is enabled."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {"labels": [{"id": "Label_1", "name": "Jobs"}]}
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        # Execute send_email
+        with pytest.raises(ValueError) as exc_info:
+            gmail_tools_restricted.send_email(params)
+
+        assert "Cannot send email when Gmail is restricted to label 'Jobs'" in str(
+            exc_info.value
+        )
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_create_draft_blocked_with_restriction(
+        self, mock_build, gmail_tools_restricted
+    ):
+        """Test that create_draft is blocked when restriction is enabled."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        # Mock labels.list() response
+        mock_labels_response = {"labels": [{"id": "Label_1", "name": "Jobs"}]}
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        # Execute create_draft
+        with pytest.raises(ValueError) as exc_info:
+            gmail_tools_restricted.create_draft(params)
+
+        assert "Cannot create draft when Gmail is restricted to label 'Jobs'" in str(
+            exc_info.value
+        )
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_send_email_allowed_without_restriction(
+        self, mock_build, gmail_tools_with_scope
+    ):
+        """Test that send_email works when no restriction is configured."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        mock_send_response = {
+            "id": "msg-123",
+            "threadId": "thread-123",
+            "labelIds": ["SENT"],
+        }
+        mock_service.users().messages().send().execute.return_value = mock_send_response
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        # Execute send_email
+        result = gmail_tools_with_scope.send_email(params)
+
+        # Should succeed
+        assert result["id"] == "msg-123"
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_create_draft_allowed_without_restriction(
+        self, mock_build, gmail_tools_with_scope
+    ):
+        """Test that create_draft works when no restriction is configured."""
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        mock_draft_response = {
+            "id": "draft-123",
+            "message": {"id": "msg-123", "threadId": "thread-123"},
+        }
+        mock_service.users().drafts().create().execute.return_value = (
+            mock_draft_response
+        )
+
+        params = {
+            "to": "test@example.com",
+            "subject": "Test",
+            "body": "Body",
+        }
+
+        # Execute create_draft
+        result = gmail_tools_with_scope.create_draft(params)
+
+        # Should succeed
+        assert result["id"] == "draft-123"

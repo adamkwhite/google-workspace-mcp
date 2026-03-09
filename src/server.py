@@ -75,7 +75,7 @@ async def handle_list_tools() -> list[types.Tool]:
     if "calendar" in enabled_services and calendar_tools is None:
         calendar_tools = GoogleCalendarTools(auth_manager)
     if "gmail" in enabled_services and gmail_tools is None:
-        gmail_tools = GmailTools(auth_manager)
+        gmail_tools = GmailTools(auth_manager, auth_manager.scope_manager)
     if "docs" in enabled_services and docs_tools is None:
         docs_tools = GoogleDocsTools(auth_manager)
 

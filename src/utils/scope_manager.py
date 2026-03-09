@@ -130,6 +130,33 @@ class ScopeManager:
 
         return errors
 
+    def _validate_gmail_settings(self) -> List[str]:
+        """Validate Gmail settings if Gmail is enabled."""
+        errors: List[str] = []
+
+        # Only validate if Gmail is enabled
+        if not self.is_service_enabled("gmail"):
+            return errors
+
+        gmail_settings = self.config.get("gmail_settings", {})
+
+        # If gmail_settings exists, validate restricted_label
+        if gmail_settings:
+            restricted_label = gmail_settings.get("restricted_label")
+
+            if restricted_label is not None:
+                # Check type
+                if not isinstance(restricted_label, str):
+                    errors.append(
+                        "gmail_settings.restricted_label must be a string, "
+                        f"got {type(restricted_label).__name__}"
+                    )
+                # Check non-empty
+                elif not restricted_label.strip():
+                    errors.append("gmail_settings.restricted_label cannot be empty")
+
+        return errors
+
     def validate_configuration(self) -> Tuple[bool, List[str]]:
         """Validate the current configuration."""
         errors = []
@@ -155,6 +182,9 @@ class ScopeManager:
             )
         )
 
+        # Validate Gmail settings
+        errors.extend(self._validate_gmail_settings())
+
         return len(errors) == 0, errors
 
     def is_service_enabled(self, service: str) -> bool:
@@ -167,12 +197,21 @@ class ScopeManager:
             service, f"Google {service.title()} service"
         )
 
+    def get_gmail_settings(self) -> Dict:
+        """Get Gmail settings from configuration."""
+        return self.config.get("gmail_settings", {})
+
+    def get_restricted_label(self) -> Optional[str]:
+        """Get the restricted label name if Gmail filtering is enabled."""
+        gmail_settings = self.get_gmail_settings()
+        return gmail_settings.get("restricted_label")
+
     def get_configuration_summary(self) -> Dict:
         """Get a summary of the current configuration."""
         enabled_services = self.get_enabled_services()
         is_valid, errors = self.validate_configuration()
 
-        return {
+        summary = {
             "config_file": str(self.config_path),
             "config_exists": self.config_path.exists(),
             "enabled_services": list(enabled_services),
@@ -184,6 +223,14 @@ class ScopeManager:
                 for service in enabled_services
             },
         }
+
+        # Include Gmail settings if Gmail is enabled
+        if self.is_service_enabled("gmail"):
+            gmail_settings = self.get_gmail_settings()
+            if gmail_settings:
+                summary["gmail_settings"] = gmail_settings
+
+        return summary
 
     def has_scope_changes(self, current_scopes: List[str]) -> bool:
         """Check if current scopes differ from required scopes."""

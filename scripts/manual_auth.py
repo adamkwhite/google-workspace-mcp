@@ -47,7 +47,9 @@ def main():
         flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
 
         print("\n🌐 Opening browser for authentication...")
-        print("⚠️  If browser doesn't open automatically, copy the URL from the console")
+        print(
+            "⚠️  If browser doesn't open automatically, copy the URL from the console"
+        )
 
         # Run local server for OAuth callback
         creds = flow.run_local_server(

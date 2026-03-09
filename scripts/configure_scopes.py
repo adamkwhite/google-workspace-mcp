@@ -185,6 +185,43 @@ class ScopeConfigurator:
             else:
                 print("❌ Please enter 'y' or 'n'")
 
+    def configure_gmail_settings(self, enabled_services: Set[str]) -> Dict:
+        """Configure Gmail settings if Gmail is enabled."""
+        gmail_settings = {}
+
+        if "gmail" not in enabled_services:
+            return gmail_settings
+
+        print()
+        print("📧 Gmail Settings:")
+        print("-" * 18)
+        print("Gmail can be restricted to only access emails with a specific label.")
+        print()
+
+        while True:
+            use_filtering = (
+                input("Restrict Gmail to a specific label? (y/n): ").strip().lower()
+            )
+            if use_filtering in ["y", "yes"]:
+                label_name = input("Enter label name (e.g., 'Jobs'): ").strip()
+                if label_name:
+                    gmail_settings["restricted_label"] = label_name
+                    print()
+                    print(f"✅ Gmail restricted to label: '{label_name}'")
+                    print("   • search_emails: Will filter to this label")
+                    print("   • send_email: Blocked")
+                    print("   • create_email_draft: Blocked")
+                    break
+                else:
+                    print("❌ Label name cannot be empty")
+            elif use_filtering in ["n", "no"]:
+                print("✅ Gmail will have full access (no label filtering)")
+                break
+            else:
+                print("❌ Please enter 'y' or 'n'")
+
+        return gmail_settings
+
     def save_configuration(self, enabled_services: Set[str]) -> bool:
         """Save the configuration to file."""
         try:
@@ -201,6 +238,14 @@ class ScopeConfigurator:
                 for service in config["enabled_services"].keys()
             }
 
+            # Configure Gmail settings
+            gmail_settings = self.configure_gmail_settings(enabled_services)
+            if gmail_settings:
+                config["gmail_settings"] = gmail_settings
+            elif "gmail_settings" in config:
+                # Remove gmail_settings if Gmail is disabled or no filtering
+                del config["gmail_settings"]
+
             # Ensure config directory exists
             self.config_path.parent.mkdir(exist_ok=True)
 
@@ -208,6 +253,7 @@ class ScopeConfigurator:
             with open(self.config_path, "w") as f:
                 json.dump(config, f, indent=2)
 
+            print()
             print(f"✅ Configuration saved to {self.config_path}")
             return True
 

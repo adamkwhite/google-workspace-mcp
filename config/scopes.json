@@ -1,9 +1,12 @@
 {
   "enabled_services": {
     "calendar": true,
-    "gmail": false,
+    "gmail": true,
     "docs": true,
     "drive": true
+  },
+  "gmail_settings": {
+    "restricted_label": "Jobs"
   },
   "scope_dependencies": {
     "docs": [

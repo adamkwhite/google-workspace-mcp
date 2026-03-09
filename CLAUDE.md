@@ -126,6 +126,20 @@ ls -la config/credentials.json
 - Error handling provides clear messages about disabled services
 - Test configuration with `get_mcp_configuration` tool
 
+### Gmail Label Filtering
+
+**Implementation Pattern**:
+- Lazy initialization: Labels fetched on first Gmail operation
+- Label caching: Gmail API labels.list() called once per server instance
+- Query enhancement: search_emails automatically appends `label:LabelName` filter
+- Operation blocking: send_email and create_draft raise ValueError when restricted
+- Configuration validation: Empty/non-string labels rejected at startup
+
+**Key Files**:
+- `src/tools/gmail.py`: Label resolution, query enhancement, operation blocking
+- `src/utils/scope_manager.py`: Gmail settings validation
+- `config/scopes.json`: User configuration for restricted_label
+
 ## Documentation Accuracy & Maintenance
 
 **Critical**: Keep README claims aligned with actual implementation
