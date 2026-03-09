@@ -194,3 +194,206 @@ class TestScopeManager:
             # Should fall back to default config
             config = manager.config
             assert "enabled_services" in config
+
+
+class TestGmailSettings:
+    """Test cases for Gmail settings functionality."""
+
+    def test_get_gmail_settings_no_settings(self):
+        """Test getting Gmail settings when none are configured."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            settings = manager.get_gmail_settings()
+
+            assert settings == {}
+
+    def test_get_gmail_settings_with_restriction(self):
+        """Test getting Gmail settings with restriction configured."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "Jobs"},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            settings = manager.get_gmail_settings()
+
+            assert settings == {"restricted_label": "Jobs"}
+
+    def test_get_restricted_label_none(self):
+        """Test getting restricted label when none configured."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            label = manager.get_restricted_label()
+
+            assert label is None
+
+    def test_get_restricted_label_configured(self):
+        """Test getting restricted label when configured."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "Jobs"},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            label = manager.get_restricted_label()
+
+            assert label == "Jobs"
+
+    def test_validate_gmail_settings_valid(self):
+        """Test validating valid Gmail settings."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {
+                    "gmail": "https://www.googleapis.com/auth/gmail.modify"
+                },
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "Jobs"},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            is_valid, errors = manager.validate_configuration()
+
+            assert is_valid is True
+            assert len(errors) == 0
+
+    def test_validate_gmail_settings_invalid_type(self):
+        """Test validating Gmail settings with invalid label type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {
+                    "gmail": "https://www.googleapis.com/auth/gmail.modify"
+                },
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": 123},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            is_valid, errors = manager.validate_configuration()
+
+            assert is_valid is False
+            assert any("must be a string" in error for error in errors)
+
+    def test_validate_gmail_settings_empty_string(self):
+        """Test validating Gmail settings with empty label string."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {
+                    "gmail": "https://www.googleapis.com/auth/gmail.modify"
+                },
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": ""},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            is_valid, errors = manager.validate_configuration()
+
+            assert is_valid is False
+            assert any("cannot be empty" in error for error in errors)
+
+    def test_validate_gmail_settings_whitespace_only(self):
+        """Test validating Gmail settings with whitespace-only label."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {
+                    "gmail": "https://www.googleapis.com/auth/gmail.modify"
+                },
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "   "},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            is_valid, errors = manager.validate_configuration()
+
+            assert is_valid is False
+            assert any("cannot be empty" in error for error in errors)
+
+    def test_validate_gmail_settings_disabled_gmail(self):
+        """Test that Gmail settings are not validated when Gmail is disabled."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": False},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": ""},  # Invalid but ignored
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            is_valid, errors = manager.validate_configuration()
+
+            assert is_valid is True
+            assert len(errors) == 0
+
+    def test_configuration_summary_includes_gmail_settings(self):
+        """Test that configuration summary includes Gmail settings when Gmail is enabled."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "Jobs"},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            summary = manager.get_configuration_summary()
+
+            assert "gmail_settings" in summary
+            assert summary["gmail_settings"]["restricted_label"] == "Jobs"
+
+    def test_configuration_summary_excludes_gmail_settings_when_disabled(self):
+        """Test that configuration summary excludes Gmail settings when Gmail is disabled."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "scopes.json"
+            config_data = {
+                "enabled_services": {"gmail": False, "calendar": True},
+                "scope_mappings": {},
+                "scope_dependencies": {},
+                "gmail_settings": {"restricted_label": "Jobs"},
+            }
+            config_path.write_text(json.dumps(config_data))
+
+            manager = ScopeManager(str(config_path))
+            summary = manager.get_configuration_summary()
+
+            assert "gmail_settings" not in summary

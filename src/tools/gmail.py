@@ -4,7 +4,7 @@ import base64
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -15,9 +15,13 @@ logger = logging.getLogger(__name__)
 class GmailTools:
     """Handles Gmail operations."""
 
-    def __init__(self, auth_manager):
+    def __init__(self, auth_manager, scope_manager=None):
         self.auth_manager = auth_manager
+        self.scope_manager = scope_manager
         self.service = None
+        self._label_cache: Optional[Dict[str, str]] = None
+        self._restricted_label_id: Optional[str] = None
+        self._label_initialized = False
 
     def _get_service(self):
         """Get or create the Gmail service."""
@@ -25,6 +29,92 @@ class GmailTools:
             creds = self.auth_manager.get_credentials()
             self.service = build("gmail", "v1", credentials=creds)
         return self.service
+
+    def _initialize_labels(self):
+        """Initialize label cache and resolve restricted label ID.
+
+        Raises:
+            ValueError: If configured label doesn't exist in Gmail
+            HttpError: If Gmail API call fails
+        """
+        if self._label_initialized:
+            return
+
+        # Check if label restriction is configured
+        if not self.scope_manager:
+            self._label_initialized = True
+            return
+
+        restricted_label_name = self.scope_manager.get_restricted_label()
+        if not restricted_label_name:
+            self._label_initialized = True
+            return
+
+        try:
+            service = self._get_service()
+            response = service.users().labels().list(userId="me").execute()
+            labels = response.get("labels", [])
+
+            # Build cache: label name -> label ID
+            self._label_cache = {label["name"]: label["id"] for label in labels}
+
+            # Resolve restricted label
+            if restricted_label_name not in self._label_cache:
+                available_labels = sorted(self._label_cache.keys())
+                raise ValueError(
+                    f"Configured Gmail label '{restricted_label_name}' not found. "
+                    f"Available labels: {', '.join(available_labels)}"
+                )
+
+            self._restricted_label_id = self._label_cache[restricted_label_name]
+            self._label_initialized = True
+
+            logger.info(
+                "Gmail label filtering initialized: "
+                f"'{restricted_label_name}' -> {self._restricted_label_id}"
+            )
+
+        except HttpError as e:
+            logger.error(f"Failed to fetch Gmail labels: {e}")
+            raise
+
+    def _enhance_search_query(self, query: str) -> str:
+        """Enhance search query with label filter if restriction is enabled.
+
+        Args:
+            query: Original search query
+
+        Returns:
+            Enhanced query with label filter appended
+        """
+        if not self._restricted_label_id:
+            return query
+
+        label_filter = f"label:{self.scope_manager.get_restricted_label()}"
+
+        if not query or not query.strip():
+            return label_filter
+
+        return f"{query} {label_filter}"
+
+    def _check_restriction_allows_operation(self, operation: str):
+        """Check if label restriction blocks the requested operation.
+
+        Args:
+            operation: Operation name (e.g., "send_email", "create_draft")
+
+        Raises:
+            ValueError: If operation is blocked by label restriction
+        """
+        if not self._restricted_label_id:
+            return
+
+        restricted_label_name = self.scope_manager.get_restricted_label()
+        raise ValueError(
+            f"Cannot {operation.replace('_', ' ')} when Gmail is restricted "
+            f"to label '{restricted_label_name}'. "
+            "Only search_emails is allowed with label filtering enabled."
+        )
 
     def _create_message(self, params: Dict[str, Any]) -> MIMEMultipart:
         """Create MIME message from parameters (shared by send and draft).
@@ -79,6 +169,10 @@ class GmailTools:
             Dictionary with sent message information
         """
         try:
+            # Initialize labels and check restrictions
+            self._initialize_labels()
+            self._check_restriction_allows_operation("send_email")
+
             # Create message using shared method
             message = self._create_message(params)
 
@@ -126,7 +220,10 @@ class GmailTools:
             Dictionary with search results
         """
         try:
-            query = params["query"]
+            # Initialize labels and enhance query with label filter
+            self._initialize_labels()
+            query = self._enhance_search_query(params["query"])
+
             max_results = params.get("max_results", 10)
             include_body = params.get("include_body", False)
 
@@ -212,6 +309,10 @@ class GmailTools:
             Dictionary with draft information
         """
         try:
+            # Initialize labels and check restrictions
+            self._initialize_labels()
+            self._check_restriction_allows_operation("create_draft")
+
             # Create message using shared method
             message = self._create_message(params)
 

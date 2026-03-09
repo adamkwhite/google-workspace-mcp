@@ -3,6 +3,7 @@
 import logging
 import os
 import pickle
+import webbrowser
 from pathlib import Path
 from typing import List, Optional
 
@@ -111,6 +112,21 @@ class GoogleAuthManager:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     self.credentials_path, required_scopes
                 )
+
+                # Use Microsoft Edge on Windows (from WSL)
+                edge_path = (
+                    "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+                )
+                if os.path.exists(edge_path):
+                    # Register Edge as the browser for OAuth
+                    webbrowser.register(
+                        "edge",
+                        None,
+                        webbrowser.BackgroundBrowser(edge_path),
+                        preferred=True,
+                    )
+                    logger.info("Using Microsoft Edge for authentication")
+
                 # This will open a browser for authentication
                 self.creds = flow.run_local_server(port=0)
                 logger.info("OAuth2 authentication completed!")
