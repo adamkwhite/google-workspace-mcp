@@ -57,6 +57,7 @@ jobs:
   sonarcloud:
     name: Tests & SonarCloud Analysis
     needs: quick-checks  # Only run if quick checks pass
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     steps:
