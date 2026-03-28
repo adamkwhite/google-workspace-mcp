@@ -1,9 +1,9 @@
 """Authentication module for Google Workspace APIs."""
 
+import asyncio
 import logging
 import os
 import pickle
-import subprocess
 import webbrowser
 from pathlib import Path
 from typing import List, Optional
@@ -44,62 +44,75 @@ class GoogleAuthManager:
 
     async def initialize(self):
         """Initialize authentication."""
-        # Validate scope configuration first
+        self._validate_scope_configuration()
+
+        required_scopes = self.scope_manager.get_required_scopes()
+        logger.info(f"Required scopes: {required_scopes}")
+
+        needs_reauth = await self._load_existing_credentials()
+
+        if not self.creds or not self.creds.valid or needs_reauth:
+            self._resolve_credentials(needs_reauth)
+            await self._save_and_deploy_credentials()
+
+        logger.info("Authentication successful!")
+
+    def _validate_scope_configuration(self):
+        """Validate scope configuration, raising on errors."""
         is_valid, errors = self.scope_manager.validate_configuration()
         if not is_valid:
             error_msg = f"Invalid scope configuration: {', '.join(errors)}"
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 
-        required_scopes = self.scope_manager.get_required_scopes()
-        logger.info(f"Required scopes: {required_scopes}")
+    async def _load_existing_credentials(self) -> bool:
+        """Load cached credentials and check for scope changes. Returns needs_reauth."""
+        if not os.path.exists(self.token_path):
+            return False
 
-        # Check if we need to re-authenticate due to scope changes
-        needs_reauth = False
-        if os.path.exists(self.token_path):
-            logger.info("Loading existing credentials...")
-            async with aiofiles.open(self.token_path, "rb") as token:
-                content = await token.read()
-                # nosec B301 - Loading OAuth token from local file created by this application
-                # This is not deserializing untrusted external data
-                self.creds = pickle.loads(content)  # nosec B301
+        logger.info("Loading existing credentials...")
+        async with aiofiles.open(self.token_path, "rb") as token:
+            content = await token.read()
+            # nosec B301 - Loading OAuth token from local file created by this application
+            # This is not deserializing untrusted external data
+            self.creds = pickle.loads(content)  # nosec B301
 
-            # Check if scopes have changed
-            if hasattr(self.creds, "scopes") and self.creds.scopes:
-                current_scopes = list(self.creds.scopes)
-                needs_reauth = self.scope_manager.has_scope_changes(current_scopes)
+        if not (hasattr(self.creds, "scopes") and self.creds.scopes):
+            return False
 
-                if needs_reauth:
-                    logger.info("Scope changes detected, re-authentication required")
-                    self.creds = None  # Force re-authentication
+        current_scopes = list(self.creds.scopes)
+        needs_reauth = self.scope_manager.has_scope_changes(current_scopes)
+        if needs_reauth:
+            logger.info("Scope changes detected, re-authentication required")
+            self.creds = None
+        return needs_reauth
 
-        if not self.creds or not self.creds.valid or needs_reauth:
-            if (
-                self.creds
-                and self.creds.expired
-                and self.creds.refresh_token
-                and not needs_reauth
-            ):
-                logger.info("Refreshing expired credentials...")
-                self.creds.refresh(Request())
-            else:
-                logger.info("Initiating new authentication flow...")
-                self._authenticate()
+    def _resolve_credentials(self, needs_reauth: bool):
+        """Refresh existing credentials or run a new authentication flow."""
+        if (
+            self.creds
+            and self.creds.expired
+            and self.creds.refresh_token
+            and not needs_reauth
+        ):
+            logger.info("Refreshing expired credentials...")
+            self.creds.refresh(Request())
+        else:
+            logger.info("Initiating new authentication flow...")
+            self._authenticate()
 
-            # Save credentials for next run
-            self.token_path.parent.mkdir(exist_ok=True)
-            async with aiofiles.open(self.token_path, "wb") as token:
-                await token.write(pickle.dumps(self.creds))
+    async def _save_and_deploy_credentials(self):
+        """Save credentials to disk and deploy to remote hosts."""
+        self.token_path.parent.mkdir(exist_ok=True)
+        async with aiofiles.open(self.token_path, "wb") as token:
+            await token.write(pickle.dumps(self.creds))
 
-            # Deploy token to remote hosts
-            deploy_script = (
-                Path(__file__).resolve().parents[2] / "scripts" / "deploy_token.sh"
-            )
-            if deploy_script.exists():
-                logger.info("Deploying token to remote hosts...")
-                subprocess.run([str(deploy_script)], check=False)
-
-        logger.info("Authentication successful!")
+        deploy_script = (
+            Path(__file__).resolve().parents[2] / "scripts" / "deploy_token.sh"
+        )
+        if deploy_script.exists():
+            logger.info("Deploying token to remote hosts...")
+            await asyncio.create_subprocess_exec(str(deploy_script))
 
     def _authenticate(self):
         """Perform OAuth2 authentication flow."""
