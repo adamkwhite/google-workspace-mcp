@@ -3,6 +3,7 @@
 import logging
 import os
 import pickle
+import subprocess
 import webbrowser
 from pathlib import Path
 from typing import List, Optional
@@ -89,6 +90,14 @@ class GoogleAuthManager:
             self.token_path.parent.mkdir(exist_ok=True)
             async with aiofiles.open(self.token_path, "wb") as token:
                 await token.write(pickle.dumps(self.creds))
+
+            # Deploy token to remote hosts
+            deploy_script = (
+                Path(__file__).resolve().parents[2] / "scripts" / "deploy_token.sh"
+            )
+            if deploy_script.exists():
+                logger.info("Deploying token to remote hosts...")
+                subprocess.run([str(deploy_script)], check=False)
 
         logger.info("Authentication successful!")
 
