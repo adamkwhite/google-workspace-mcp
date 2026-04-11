@@ -1,0 +1,113 @@
+name: Close-the-loop on feature PRs
+
+# When a PR merges into main, detect feature folders under
+# docs/features/*-IN_PROGRESS/ that were touched by the PR AND rename
+# them to -COMPLETED — but only if the PR also touched files OUTSIDE
+# docs/features/ (heuristic for "this PR shipped implementation code,
+# not just a PRD/tasks-only edit").
+#
+# Skips -PLANNED folders on purpose: PLANNED → IN_PROGRESS is a
+# deliberate "I'm actually starting work" checkpoint the user makes
+# manually. IN_PROGRESS → COMPLETED is the automated transition.
+#
+# Commits back to main with [skip ci] to prevent recursion.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  auto-complete:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-complete IN_PROGRESS feature folders
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          # List files changed in the PR
+          files=$(gh pr view "$PR_NUM" --json files -q '.files[].path')
+
+          if [ -z "$files" ]; then
+            echo "PR has no file changes. Nothing to do."
+            exit 0
+          fi
+
+          # Find unique IN_PROGRESS feature folders touched in this PR
+          in_progress_folders=$(echo "$files" \
+            | awk -F/ '$1=="docs" && $2=="features" && $3 ~ /-IN_PROGRESS$/ {print "docs/features/"$3}' \
+            | sort -u)
+
+          if [ -z "$in_progress_folders" ]; then
+            echo "No IN_PROGRESS feature folders touched. Nothing to do."
+            exit 0
+          fi
+
+          # Require at least one file OUTSIDE docs/features/ — this confirms
+          # the PR is shipping implementation code, not just PRD/tasks edits.
+          non_feature_files=$(echo "$files" | grep -v '^docs/features/' || true)
+          if [ -z "$non_feature_files" ]; then
+            echo "PR only touched docs/features/ (no implementation files). Skipping auto-complete."
+            exit 0
+          fi
+
+          # Configure git as the GitHub Actions bot
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          today=$(date -u +%Y-%m-%d)
+          renamed=0
+
+          while IFS= read -r folder; do
+            [ -z "$folder" ] && continue
+            new_folder="${folder%-IN_PROGRESS}-COMPLETED"
+
+            if [ ! -d "$folder" ]; then
+              echo "Folder $folder not present on main (may already have been renamed). Skipping."
+              continue
+            fi
+            if [ -d "$new_folder" ]; then
+              echo "Target $new_folder already exists. Skipping $folder to avoid clobbering."
+              continue
+            fi
+
+            echo "Renaming $folder → $new_folder"
+            git mv "$folder" "$new_folder"
+
+            # Update status.md inside the renamed folder if present
+            status_file="$new_folder/status.md"
+            if [ -f "$status_file" ]; then
+              sed -i 's/Implementation Status:[[:space:]]*IN_PROGRESS/Implementation Status: COMPLETED/' "$status_file"
+              sed -i 's/📋 IN_PROGRESS/✅ COMPLETED/' "$status_file"
+              sed -i "s/^\*\*Last Updated:\*\*.*/\*\*Last Updated:\*\* $today/" "$status_file"
+              git add "$status_file"
+            fi
+
+            feature_name=$(basename "$new_folder" | sed 's/-COMPLETED$//')
+            git commit \
+              -m "chore: auto-complete feature $feature_name (closed by #$PR_NUM) [skip ci]" \
+              -m "Automated by close-the-loop workflow. PR #$PR_NUM touched $folder along with files outside docs/features/, indicating the feature shipped. Renamed to $new_folder and updated status.md if present."
+
+            renamed=$((renamed + 1))
+          done <<< "$in_progress_folders"
+
+          if [ "$renamed" -gt 0 ]; then
+            echo "Pushing $renamed rename commit(s) to main..."
+            git push origin main
+          else
+            echo "No folders renamed."
+          fi
