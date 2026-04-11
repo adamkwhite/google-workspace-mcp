@@ -21,11 +21,20 @@ To guide an AI assistant in creating a detailed Product Requirements Document (P
 10. **Flag architectural decisions for ADRs:** If the PRD process surfaced a significant architectural or design decision (choosing approach A over B, adopting a new dependency, picking a data store, etc.), ask the user whether to also create an ADR using `create-adr.md`. ADRs ride along in the same feature branch as the PRD.
 
 ## Status Management
-- **PLANNED**: Feature is documented but not yet started
-- **IN_PROGRESS**: Feature is being actively developed
-- **COMPLETED**: Feature is fully implemented and deployed
 
-Rename the directory to reflect current status (e.g., `user-auth-PLANNED` → `user-auth-IN_PROGRESS` → `user-auth-COMPLETED`).
+The feature folder suffix tracks lifecycle state:
+
+- **PLANNED**: Feature is documented but implementation has not begun
+- **IN_PROGRESS**: Feature is being actively developed
+- **COMPLETED**: Feature is fully implemented and merged
+
+**State transitions are automated — the user never renames these folders manually:**
+
+1. `create-prd.md` creates the folder at `-PLANNED`.
+2. `process-task-list.md` promotes it to `-IN_PROGRESS` as the first step of task execution, when real work begins (code changes, not just planning).
+3. The `close-the-loop` GitHub Action (`.github/workflows/close-the-loop.yml`) promotes it to `-COMPLETED` automatically when the feature's PR merges into `main` and the PR touched files outside `docs/features/`.
+
+If you find a folder in a state that doesn't match the workflow phase (e.g., still `-PLANNED` after implementation has started), rename it by hand with `git mv` and commit — but the expected path is for the three automated steps above to handle everything.
 
 ## Clarifying Questions (Examples)
 
