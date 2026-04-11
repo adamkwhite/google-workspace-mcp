@@ -1,8 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: false
----
 # Rule: Generating a Task List from a PRD
 
 ## Goal
@@ -12,8 +7,8 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 ## Output
 
 - **Format:** Markdown (`.md`)
-- **Location:** `/tasks/`
-- **Filename:** `tasks-[prd-file-name].md` (e.g., `tasks-prd-user-profile-editing.md`)
+- **Location:** Same feature directory as the PRD (e.g., `docs/features/[feature-name]-PLANNED/`)
+- **Filename:** `tasks.md`
 
 ## Process
 
@@ -24,7 +19,22 @@ To guide an AI assistant in creating a detailed, step-by-step task list in Markd
 5.  **Phase 2: Generate Sub-Tasks:** Once the user confirms, break down each parent task into smaller, actionable sub-tasks necessary to complete the parent task. Ensure sub-tasks logically follow from the parent task and cover the implementation details implied by the PRD.
 6.  **Identify Relevant Files:** Based on the tasks and PRD, identify potential files that will need to be created or modified. List these under the `Relevant Files` section, including corresponding test files if applicable.
 7.  **Generate Final Output:** Combine the parent tasks, sub-tasks, relevant files, and notes into the final Markdown structure.
-8.  **Save Task List:** Save the generated document in the `/tasks/` directory with the filename `tasks-[prd-file-name].md`, where `[prd-file-name]` matches the base name of the input PRD file (e.g., if the input was `prd-user-profile-editing.md`, the output is `tasks-prd-user-profile-editing.md`).
+8.  **Save Task List:** Save the generated document as `tasks.md` in the same feature directory as the PRD (e.g., if the PRD is in `docs/features/user-profile-editing-PLANNED/`, save the tasks as `docs/features/user-profile-editing-PLANNED/tasks.md`).
+
+9. **Create Status File:** Also create a `status.md` file in the same directory to track implementation progress, with the following template:
+```markdown
+# [Feature Name] - 📋 PLANNED
+
+**Implementation Status:** PLANNED
+**PR:** Not created
+**Last Updated:** [Date]
+
+## Task Completion
+- [ ] [List key tasks from tasks.md]
+
+## Next Steps
+- Begin implementation following tasks.md
+```
 
 ## Output Format
 
@@ -56,9 +66,14 @@ The generated task list _must_ follow this structure:
 ```
 
 ## Interaction Model
+The process explicitly requires a pause after generating parent tasks to get user confirmation ("Go") before proceeding to generate the detailed sub-tasks.
+This ensures the high-level plan aligns with user expectations before diving into details.
+Offer to process the task list using `process-task-list.md`
+(Reply "yes" or "y" to continue)
 
-The process explicitly requires a pause after generating parent tasks to get user confirmation ("Go") before proceeding to generate the detailed sub-tasks. This ensures the high-level plan aligns with user expectations before diving into details.
+## Flagging Architectural Decisions
+
+While generating tasks, watch for sub-tasks that imply a significant architectural or design choice that is not obvious from the PRD (e.g., "choose between Redis and in-memory caching", "decide on ORM", "pick a diffing strategy"). If a task implies such a decision, note it inline in the task list with `(ADR needed)` and remind the user at the end of generation that an ADR should be created using `create-adr.md` before or during that sub-task's execution.
 
 ## Target Audience
-
 Assume the primary reader of the task list is a **junior developer** who will implement the feature.
