@@ -2,6 +2,23 @@
 
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
 
+## Starting Execution
+
+Before implementing any sub-task, promote the feature folder from `-PLANNED` to `-IN_PROGRESS`. This is the point in the workflow where planning ends and work begins — the folder name must reflect that.
+
+1. **Locate the parent feature folder.** It is the directory containing `tasks.md` (e.g., `docs/features/user-auth-PLANNED/`).
+2. **If the folder is named `*-PLANNED`:**
+   - `git mv docs/features/[feature-name]-PLANNED docs/features/[feature-name]-IN_PROGRESS`
+   - If `status.md` exists inside, update it:
+     - Replace `Implementation Status: PLANNED` with `Implementation Status: IN_PROGRESS`
+     - Replace `📋 PLANNED` with `🚧 IN_PROGRESS` in the title line
+     - Update `**Last Updated:**` to today's date
+   - Commit on the current feature branch with subject `chore: start work on [feature-name]`.
+3. **If the folder is already `*-IN_PROGRESS`:** proceed directly — the rename was done on a prior run.
+4. **If the folder is `*-COMPLETED`:** stop and confirm with the user. You should not be executing a task list against a completed feature.
+
+This transition happens exactly once per feature, at the start of implementation. The `-IN_PROGRESS` → `-COMPLETED` transition is handled automatically by the `close-the-loop` GitHub Action when the feature's PR merges into `main` — do not attempt it manually here.
+
 ## Task Implementation
 - Start a new gh branch
 - **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say “yes” or "y"
