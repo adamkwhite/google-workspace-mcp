@@ -1,12 +1,13 @@
 {
+  "_comment": "TEMPLATE. Alternative that calls the venv Python directly (no bash wrapper). Replace <ABSOLUTE_PATH_TO_REPO> with the absolute path to your clone. Use this if the bash -c form in claude_desktop_config.json doesn't work for your setup.",
   "mcpServers": {
     "google-workspace": {
-      "command": "/home/adam/Code/google-workspace-mcp/venv/bin/python",
+      "command": "<ABSOLUTE_PATH_TO_REPO>/.venv/bin/python",
       "args": [
-        "/home/adam/Code/google-workspace-mcp/src/server.py"
+        "<ABSOLUTE_PATH_TO_REPO>/src/server.py"
       ],
       "env": {
-        "PYTHONPATH": "/home/adam/Code/google-workspace-mcp/src"
+        "PYTHONPATH": "<ABSOLUTE_PATH_TO_REPO>/src"
       }
     }
   }
