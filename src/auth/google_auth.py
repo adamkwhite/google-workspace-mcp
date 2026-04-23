@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import pickle
+import sys
 import webbrowser
 from pathlib import Path
 from typing import List, Optional
@@ -112,7 +113,14 @@ class GoogleAuthManager:
         )
         if deploy_script.exists():
             logger.info("Deploying token to remote hosts...")
-            await asyncio.create_subprocess_exec(str(deploy_script))
+            # Redirect subprocess stdout/stderr to our stderr. The MCP server's
+            # stdout is the JSON-RPC channel; any inherited stdout from a child
+            # process corrupts the protocol and triggers a client-side parse error.
+            await asyncio.create_subprocess_exec(
+                str(deploy_script),
+                stdout=sys.stderr.fileno(),
+                stderr=sys.stderr.fileno(),
+            )
 
     def _authenticate(self):
         """Perform OAuth2 authentication flow."""

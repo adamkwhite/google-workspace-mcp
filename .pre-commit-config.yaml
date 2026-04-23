@@ -11,9 +11,15 @@ repos:
       - id: ruff
         name: Lint Python code with Ruff
         # No --fix flag: Match CI behavior (fail on issues, no auto-fix)
-      - id: ruff-format
-        name: Format Python code with Ruff
-        args: [--check]  # Match CI: fail if not formatted
+
+  # Code formatting (CI uses black, not ruff format; ruff's 100-char default
+  # disagrees with black's 88-char default, so matching CI avoids churn).
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        name: Format Python code with Black
+        args: [--check]
 
   # Static type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -21,8 +27,8 @@ repos:
     hooks:
       - id: mypy
         name: Type check with mypy
-        additional_dependencies: [pydantic>=2.0.0]
-        args: [--config-file=pyproject.toml]  # Match CI: use project config
+        additional_dependencies: [pydantic>=2.0.0, types-aiofiles]
+        args: [--ignore-missing-imports]  # Match CI (build.yml: mypy src --ignore-missing-imports)
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -51,7 +57,7 @@ repos:
     hooks:
       - id: bandit
         name: Security scan with Bandit (high severity)
-        args: [--severity-level, high, -c, pyproject.toml]
+        args: [--severity-level, high]
         additional_dependencies: ["bandit[toml]"]
 
   # Dependency security
