@@ -123,7 +123,7 @@ This MCP server follows the principle of least privilege by intentionally exclud
          "command": "wsl.exe",
          "args": [
            "-d", "Ubuntu",
-           "bash", "--", "-c",
+           "bash", "-c",
            "cd <ABSOLUTE_PATH_TO_REPO> && source .venv/bin/activate && PYTHONPATH=<ABSOLUTE_PATH_TO_REPO>/src python src/server.py"
          ]
        }

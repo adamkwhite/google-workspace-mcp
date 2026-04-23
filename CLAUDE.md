@@ -30,6 +30,10 @@ Before producing a config:
 3. For Windows Claude Desktop with WSL, use the `wsl.exe` form from `config/claude_desktop_config.json`. For native Linux/macOS, drop the `wsl.exe` wrapper and call the venv Python directly (see `config/claude_desktop_config_alternative.json`).
 4. After the user updates the config, Claude Desktop must be fully quit and relaunched — MCP servers only load at startup.
 
+### Do not insert `--` between `bash` and `-c`
+
+The correct form is `"bash", "-c", "<command>"`. Do **not** write `"bash", "--", "-c", "<command>"` — the `--` ends bash's option parsing, so bash then treats `-c` as a script filename to open, yielding `bash: -c: No such file or directory` and an immediate MCP disconnect. This mistake appeared in an earlier iteration of the template and broke the live Claude Desktop config on startup.
+
 ## Essential Commands
 
 ### Development Setup

@@ -109,7 +109,7 @@ cat << EOF
       "command": "wsl.exe",
       "args": [
         "-d", "Ubuntu",
-        "bash", "--", "-c",
+        "bash", "-c",
         "cd ${REPO_PATH} && source .venv/bin/activate && PYTHONPATH=${REPO_PATH}/src python src/server.py"
       ]
     }
