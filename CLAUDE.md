@@ -34,6 +34,10 @@ Before producing a config:
 
 The correct form is `"bash", "-c", "<command>"`. Do **not** write `"bash", "--", "-c", "<command>"` — the `--` ends bash's option parsing, so bash then treats `-c` as a script filename to open, yielding `bash: -c: No such file or directory` and an immediate MCP disconnect. This mistake appeared in an earlier iteration of the template and broke the live Claude Desktop config on startup.
 
+### Claude Code on Linux: same venv pitfall applies to `~/.claude.json`
+
+When this MCP is registered with Claude Code (not Claude Desktop), the config lives in `~/.claude.json` under `projects[<repo-path>].mcpServers["google-workspace"]`. The same `.venv` vs `venv` drift that breaks Claude Desktop configs breaks this one too — `source venv/bin/activate` silently no-ops, the system Python runs without deps, and the server fails to connect. The same entry often appears duplicated under multiple project scopes in `~/.claude.json`; fix all occurrences.
+
 ## Essential Commands
 
 ### Development Setup
