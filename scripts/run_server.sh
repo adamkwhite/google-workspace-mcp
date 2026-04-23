@@ -1,11 +1,20 @@
 #!/bin/bash
-# Wrapper script to run the MCP server with the virtual environment
+# Wrapper script to run the MCP server with the virtual environment.
 
-# Get the directory where this script is located
+set -e
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ROOT="$( cd "$DIR/.." && pwd )"
 
-# Activate the virtual environment
-source "$DIR/venv/bin/activate"
+if [ -d "$ROOT/.venv" ]; then
+    source "$ROOT/.venv/bin/activate"
+elif [ -d "$ROOT/venv" ]; then
+    source "$ROOT/venv/bin/activate"
+else
+    echo "Error: no virtual environment found at $ROOT/.venv or $ROOT/venv" >&2
+    echo "Run ./scripts/setup.sh to create one." >&2
+    exit 1
+fi
 
-# Run the server
-python "$DIR/src/server.py"
+export PYTHONPATH="$ROOT/src"
+python "$ROOT/src/server.py"

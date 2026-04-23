@@ -115,20 +115,22 @@ This MCP server follows the principle of least privilege by intentionally exclud
    - Download as `config/credentials.json`
 
 5. **Configure Claude Desktop**:
-   Add to your Claude Desktop config:
+   Add to your Claude Desktop config, replacing `<ABSOLUTE_PATH_TO_REPO>` with the absolute path to your clone (e.g., `/home/you/Code/google-workspace-mcp`). On Windows Claude Desktop with WSL:
    ```json
    {
      "mcpServers": {
        "google-workspace": {
-         "command": "python",
-         "args": ["/home/adam/Code/google-workspace-mcp/src/server.py"],
-         "env": {
-           "PYTHONPATH": "/home/adam/Code/google-workspace-mcp/src"
-         }
+         "command": "wsl.exe",
+         "args": [
+           "-d", "Ubuntu",
+           "bash", "--", "-c",
+           "cd <ABSOLUTE_PATH_TO_REPO> && source .venv/bin/activate && PYTHONPATH=<ABSOLUTE_PATH_TO_REPO>/src python src/server.py"
+         ]
        }
      }
    }
    ```
+   See `config/claude_desktop_config.json` for the template and `config/claude_desktop_config_alternative.json` for a bash-free alternative. On non-Windows hosts, drop the `wsl.exe` wrapper and call the venv Python directly.
 
 6. **First run** will open browser for authentication (only for enabled services)
 
@@ -337,7 +339,7 @@ All quotas are per-user and more than sufficient for personal use:
 
 ```bash
 # Activate virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
 # Run tests
 pytest tests/

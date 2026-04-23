@@ -26,9 +26,9 @@ echo "Note: Service accounts require Google Workspace, but OAuth2 works with Gma
 echo ""
 
 # Create virtual environment
-echo "Creating Python virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+echo "Creating Python virtual environment (.venv)..."
+python3 -m venv .venv
+source .venv/bin/activate
 
 # Install dependencies
 echo "Installing dependencies..."
@@ -99,19 +99,19 @@ echo "MCP Configuration for Claude Desktop"
 echo "==================================="
 echo ""
 echo "Add the following to your Claude Desktop config:"
-echo "(Usually at ~/AppData/Roaming/Claude/claude_desktop_config.json on Windows)"
+echo "(On Windows, edit %APPDATA%\\Claude\\claude_desktop_config.json)"
 echo ""
+REPO_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cat << EOF
 {
   "mcpServers": {
     "google-workspace": {
-      "command": "python",
+      "command": "wsl.exe",
       "args": [
-        "/home/adam/Code/google-workspace-mcp/src/server.py"
-      ],
-      "env": {
-        "PYTHONPATH": "/home/adam/Code/google-workspace-mcp/src"
-      }
+        "-d", "Ubuntu",
+        "bash", "--", "-c",
+        "cd ${REPO_PATH} && source .venv/bin/activate && PYTHONPATH=${REPO_PATH}/src python src/server.py"
+      ]
     }
   }
 }
@@ -119,7 +119,7 @@ EOF
 
 echo ""
 echo "Setup complete! Next steps:"
-echo "1. Activate virtual environment: source venv/bin/activate"
+echo "1. Activate virtual environment: source .venv/bin/activate"
 echo "2. Run the server: python src/server.py"
 echo "3. Configure Claude Desktop with the above settings"
 echo "4. Restart Claude Desktop"

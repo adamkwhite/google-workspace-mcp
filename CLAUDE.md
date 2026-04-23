@@ -20,15 +20,25 @@ Works with regular Gmail accounts - no Google Workspace subscription required.
 - Dependencies are automatically handled (e.g., Docs requires Drive)
 - Scope changes trigger automatic re-authentication
 
+## MCP Configuration Guidance (for AI agents)
+
+When helping a user write their Claude Desktop `claude_desktop_config.json` for this project, do not copy example paths verbatim. The templates in `config/` use `<ABSOLUTE_PATH_TO_REPO>` as a placeholder that the user must replace with the absolute path to their clone. Previous agent-generated configs have failed by pasting `/home/user/google-workspace-mcp` (a placeholder) into the live config, which silently breaks the MCP connection because no such directory exists.
+
+Before producing a config:
+1. Get the user's actual absolute path — ask them, or run `pwd` from the repo root if you have shell access. Never guess.
+2. Check which virtualenv directory exists: `ls -d .venv venv 2>/dev/null`. The setup script creates `.venv/`, but older clones may have `venv/`. The `scripts/run_server.sh` wrapper handles both; a direct config line must pick one.
+3. For Windows Claude Desktop with WSL, use the `wsl.exe` form from `config/claude_desktop_config.json`. For native Linux/macOS, drop the `wsl.exe` wrapper and call the venv Python directly (see `config/claude_desktop_config_alternative.json`).
+4. After the user updates the config, Claude Desktop must be fully quit and relaunched — MCP servers only load at startup.
+
 ## Essential Commands
 
 ### Development Setup
 ```bash
-# Initial setup (creates venv, installs deps, guides OAuth2 setup)
+# Initial setup (creates .venv, installs deps, guides OAuth2 setup)
 ./scripts/setup.sh
 
 # Activate virtual environment (required for all development)
-source venv/bin/activate
+source .venv/bin/activate
 
 # Run MCP server directly for testing
 python src/server.py
@@ -118,7 +128,7 @@ ls -la config/credentials.json
 
 ## Development Notes
 
-- Always activate virtual environment: `source venv/bin/activate`
+- Always activate virtual environment: `source .venv/bin/activate`
 - OAuth2 requires browser for initial authentication
 - Use `python scripts/configure_scopes.py` for easy service configuration
 - Tool registration is conditional based on config/scopes.json

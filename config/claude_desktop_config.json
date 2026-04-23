@@ -1,11 +1,12 @@
 {
+  "_comment": "TEMPLATE. Replace <ABSOLUTE_PATH_TO_REPO> with the absolute path to your clone (e.g., /home/you/Code/google-workspace-mcp). On Windows Claude Desktop with WSL, paste this into %APPDATA%\\Claude\\claude_desktop_config.json after substitution.",
   "mcpServers": {
     "google-workspace": {
-      "command": "wsl",
+      "command": "wsl.exe",
       "args": [
-        "bash", 
-        "-c", 
-        "cd /home/adam/Code/google-workspace-mcp && source venv/bin/activate && python src/server.py"
+        "-d", "Ubuntu",
+        "bash", "--", "-c",
+        "cd <ABSOLUTE_PATH_TO_REPO> && source .venv/bin/activate && PYTHONPATH=<ABSOLUTE_PATH_TO_REPO>/src python src/server.py"
       ]
     }
   }
