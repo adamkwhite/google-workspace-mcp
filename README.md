@@ -92,6 +92,7 @@ This MCP server follows the principle of least privilege by intentionally exclud
 
 1. **Clone and setup**:
    ```bash
+   git clone https://github.com/adamkwhite/google-workspace-mcp.git
    cd google-workspace-mcp
    ./scripts/setup.sh
    ```
@@ -260,7 +261,9 @@ Restrict Gmail operations to emails with one or more specific labels:
 ```
 Label names must match Gmail exactly (case-sensitive, including leading
 underscores and spaces). Multiple labels are combined with OR, so
-`search_emails` returns mail carrying any one of them.
+`search_emails` returns mail carrying any one of them. The interactive
+`configure_scopes.py` wizard only sets a single label — for a list, edit
+`config/scopes.json` directly.
 
 **Behavior**:
 - ✅ **search_emails**: Automatically filters to only show emails with the configured label(s)
@@ -340,7 +343,7 @@ google-workspace-mcp/
 - **User-configurable service permissions** - Enable only Calendar, Gmail, Docs, or any combination
 - Minimal scope requests based on enabled services:
   - Calendar: `https://www.googleapis.com/auth/calendar` (if enabled)
-  - Gmail: `https://www.googleapis.com/auth/gmail.send`, `https://www.googleapis.com/auth/gmail.readonly` (if enabled)
+  - Gmail: `https://www.googleapis.com/auth/gmail.modify` (if enabled)
   - Docs: `https://www.googleapis.com/auth/documents`, `https://www.googleapis.com/auth/drive.file` (if enabled)
 - Tokens stored locally, never transmitted
 - Automatic token refresh
