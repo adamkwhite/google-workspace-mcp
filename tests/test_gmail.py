@@ -20,6 +20,7 @@ def mock_scope_manager():
     """Create a mock scope manager."""
     scope_manager = Mock()
     scope_manager.get_restricted_label.return_value = None
+    scope_manager.get_restricted_labels.return_value = []
     return scope_manager
 
 
@@ -28,6 +29,7 @@ def mock_scope_manager_with_restriction():
     """Create a mock scope manager with label restriction."""
     scope_manager = Mock()
     scope_manager.get_restricted_label.return_value = "Jobs"
+    scope_manager.get_restricted_labels.return_value = ["Jobs"]
     return scope_manager
 
 
@@ -336,7 +338,7 @@ class TestGmailLabelFiltering:
         gmail_tools_restricted.search_emails({"query": "test"})
 
         # Verify label was resolved
-        assert gmail_tools_restricted._restricted_label_id == "Label_1"
+        assert gmail_tools_restricted._restricted_label_ids == ["Label_1"]
         assert gmail_tools_restricted._label_initialized is True
 
     @pytest.mark.asyncio
@@ -377,7 +379,7 @@ class TestGmailLabelFiltering:
         gmail_tools_with_scope.search_emails({"query": "test"})
 
         # Verify no label filtering applied
-        assert gmail_tools_with_scope._restricted_label_id is None
+        assert gmail_tools_with_scope._restricted_label_ids == []
         assert gmail_tools_with_scope._label_initialized is True
 
         # Verify query passed through unchanged
@@ -432,7 +434,7 @@ class TestGmailLabelFiltering:
 
         # Verify query was enhanced with label filter
         call_args = mock_service.users().messages().list.call_args
-        assert call_args[1]["q"] == "from:example@example.com label:Jobs"
+        assert call_args[1]["q"] == 'from:example@example.com label:"Jobs"'
 
     @pytest.mark.asyncio
     @patch("tools.gmail.build")
@@ -456,7 +458,42 @@ class TestGmailLabelFiltering:
 
         # Verify query is just the label filter
         call_args = mock_service.users().messages().list.call_args
-        assert call_args[1]["q"] == "label:Jobs"
+        assert call_args[1]["q"] == 'label:"Jobs"'
+
+    @pytest.mark.asyncio
+    @patch("tools.gmail.build")
+    async def test_multiple_labels_ored_and_quoted(self, mock_build, mock_auth_manager):
+        """Multiple restricted labels are resolved, OR-ed, and quoted."""
+        scope_manager = Mock()
+        scope_manager.get_restricted_labels.return_value = [
+            "Jobs",
+            "_News Feed",
+            "AI",
+        ]
+        gmail = GmailTools(mock_auth_manager, scope_manager)
+
+        mock_service = MagicMock()
+        mock_build.return_value = mock_service
+
+        mock_labels_response = {
+            "labels": [
+                {"id": "Label_1", "name": "Jobs"},
+                {"id": "Label_2", "name": "_News Feed"},
+                {"id": "Label_3", "name": "AI"},
+                {"id": "Label_4", "name": "Personal"},
+            ]
+        }
+        mock_service.users().labels().list().execute.return_value = mock_labels_response
+        mock_service.users().messages().list().execute.return_value = {"messages": []}
+
+        gmail.search_emails({"query": "is:unread"})
+
+        assert gmail._restricted_label_ids == ["Label_1", "Label_2", "Label_3"]
+        call_args = mock_service.users().messages().list.call_args
+        assert (
+            call_args[1]["q"]
+            == 'is:unread (label:"Jobs" OR label:"_News Feed" OR label:"AI")'
+        )
 
     @pytest.mark.asyncio
     @patch("tools.gmail.build")

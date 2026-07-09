@@ -227,9 +227,9 @@ Edit `config/scopes.json` directly:
 
 ### Gmail Label Filtering
 
-Restrict Gmail operations to emails with a specific label:
+Restrict Gmail operations to emails with one or more specific labels:
 
-**Configuration**:
+**Configuration** (single label):
 ```json
 {
   "enabled_services": {
@@ -241,8 +241,20 @@ Restrict Gmail operations to emails with a specific label:
 }
 ```
 
+**Configuration** (multiple labels — reads from any of them):
+```json
+{
+  "gmail_settings": {
+    "restricted_label": ["Jobs", "_News Feed", "AI"]
+  }
+}
+```
+Label names must match Gmail exactly (case-sensitive, including leading
+underscores and spaces). Multiple labels are combined with OR, so
+`search_emails` returns mail carrying any one of them.
+
 **Behavior**:
-- ✅ **search_emails**: Automatically filters to only show emails with "Jobs" label
+- ✅ **search_emails**: Automatically filters to only show emails with the configured label(s)
 - 🚫 **send_email**: Blocked with clear error message
 - 🚫 **create_email_draft**: Blocked with clear error message
 
