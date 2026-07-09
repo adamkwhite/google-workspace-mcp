@@ -210,7 +210,12 @@ The interactive tool helps you:
 - 🗑️ Clean up authentication tokens when needed
 
 ### Manual Configuration
-Edit `config/scopes.json` directly:
+`config/scopes.json` is gitignored (it's your local config). Copy the template
+to create it, then edit — the server also falls back to sensible defaults if the
+file is absent:
+```bash
+cp config/scopes.example.json config/scopes.json
+```
 ```json
 {
   "enabled_services": {
@@ -302,7 +307,8 @@ In Claude, use: `get_mcp_configuration` to see:
 ```
 google-workspace-mcp/
 ├── config/
-│   ├── scopes.json        # Service configuration (user-editable)
+│   ├── scopes.example.json # Template — copy to scopes.json
+│   ├── scopes.json        # Your service config (gitignored, user-editable)
 │   ├── credentials.json   # OAuth2 credentials from Google
 │   └── token.pickle      # Cached authentication token
 ├── src/                    # Application source code
