@@ -210,7 +210,16 @@ The interactive tool helps you:
 - 🗑️ Clean up authentication tokens when needed
 
 ### Manual Configuration
-Edit `config/scopes.json` directly:
+`config/scopes.json` is gitignored (it's your local config). Copy the template
+to create it, then edit — the server also falls back to sensible defaults if the
+file is absent:
+```bash
+cp config/scopes.example.json config/scopes.json
+```
+The template ships with a sample `gmail_settings.restricted_label` list
+(note `_News Feed` — multi-word labels are matched exactly and quoted
+automatically). Replace those with your own Gmail labels, or delete the
+`gmail_settings` block to leave Gmail unrestricted.
 ```json
 {
   "enabled_services": {
@@ -227,9 +236,9 @@ Edit `config/scopes.json` directly:
 
 ### Gmail Label Filtering
 
-Restrict Gmail operations to emails with a specific label:
+Restrict Gmail operations to emails with one or more specific labels:
 
-**Configuration**:
+**Configuration** (single label):
 ```json
 {
   "enabled_services": {
@@ -241,8 +250,20 @@ Restrict Gmail operations to emails with a specific label:
 }
 ```
 
+**Configuration** (multiple labels — reads from any of them):
+```json
+{
+  "gmail_settings": {
+    "restricted_label": ["Jobs", "_News Feed", "AI"]
+  }
+}
+```
+Label names must match Gmail exactly (case-sensitive, including leading
+underscores and spaces). Multiple labels are combined with OR, so
+`search_emails` returns mail carrying any one of them.
+
 **Behavior**:
-- ✅ **search_emails**: Automatically filters to only show emails with "Jobs" label
+- ✅ **search_emails**: Automatically filters to only show emails with the configured label(s)
 - 🚫 **send_email**: Blocked with clear error message
 - 🚫 **create_email_draft**: Blocked with clear error message
 
@@ -290,7 +311,8 @@ In Claude, use: `get_mcp_configuration` to see:
 ```
 google-workspace-mcp/
 ├── config/
-│   ├── scopes.json        # Service configuration (user-editable)
+│   ├── scopes.example.json # Template — copy to scopes.json
+│   ├── scopes.json        # Your service config (gitignored, user-editable)
 │   ├── credentials.json   # OAuth2 credentials from Google
 │   └── token.pickle      # Cached authentication token
 ├── src/                    # Application source code

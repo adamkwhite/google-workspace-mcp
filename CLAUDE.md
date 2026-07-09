@@ -149,7 +149,7 @@ ls -la config/credentials.json
 **Implementation Pattern**:
 - Lazy initialization: Labels fetched on first Gmail operation
 - Label caching: Gmail API labels.list() called once per server instance
-- Query enhancement: search_emails automatically appends `label:LabelName` filter
+- Query enhancement: search_emails automatically appends a `label:"Name"` filter; `restricted_label` may be a single string or a list of names, which are OR-ed and quoted
 - Operation blocking: send_email and create_draft raise ValueError when restricted
 - Configuration validation: Empty/non-string labels rejected at startup
 

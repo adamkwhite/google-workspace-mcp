@@ -140,20 +140,32 @@ class ScopeManager:
 
         gmail_settings = self.config.get("gmail_settings", {})
 
-        # If gmail_settings exists, validate restricted_label
+        # If gmail_settings exists, validate restricted_label.
+        # Accepts a single string or a list of strings (multiple allowed labels).
         if gmail_settings:
             restricted_label = gmail_settings.get("restricted_label")
 
-            if restricted_label is not None:
-                # Check type
-                if not isinstance(restricted_label, str):
-                    errors.append(
-                        "gmail_settings.restricted_label must be a string, "
-                        f"got {type(restricted_label).__name__}"
-                    )
-                # Check non-empty
-                elif not restricted_label.strip():
+            if isinstance(restricted_label, str):
+                if not restricted_label.strip():
                     errors.append("gmail_settings.restricted_label cannot be empty")
+            elif isinstance(restricted_label, list):
+                if not restricted_label:
+                    errors.append("gmail_settings.restricted_label cannot be empty")
+                for item in restricted_label:
+                    if not isinstance(item, str):
+                        errors.append(
+                            "gmail_settings.restricted_label entries must be "
+                            f"strings, got {type(item).__name__}"
+                        )
+                    elif not item.strip():
+                        errors.append(
+                            "gmail_settings.restricted_label entries cannot be empty"
+                        )
+            elif restricted_label is not None:
+                errors.append(
+                    "gmail_settings.restricted_label must be a string or list "
+                    f"of strings, got {type(restricted_label).__name__}"
+                )
 
         return errors
 
@@ -202,9 +214,21 @@ class ScopeManager:
         return self.config.get("gmail_settings", {})
 
     def get_restricted_label(self) -> Optional[str]:
-        """Get the restricted label name if Gmail filtering is enabled."""
+        """Get the raw restricted_label config value (str, list, or None)."""
         gmail_settings = self.get_gmail_settings()
         return gmail_settings.get("restricted_label")
+
+    def get_restricted_labels(self) -> List[str]:
+        """Get restricted label names as a list.
+
+        Normalizes the ``restricted_label`` config value, which may be a
+        single string or a list of strings, into a list. Returns an empty
+        list when no restriction is configured.
+        """
+        raw = self.get_gmail_settings().get("restricted_label")
+        if not raw:
+            return []
+        return [raw] if isinstance(raw, str) else list(raw)
 
     def get_configuration_summary(self) -> Dict:
         """Get a summary of the current configuration."""

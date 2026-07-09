@@ -18,6 +18,10 @@ config/token.pickle*
 config/token.json
 *.pickle
 
+# User's local service configuration (copy from config/scopes.example.json).
+# Falls back to built-in defaults if absent.
+config/scopes.json
+
 # Slack cache files (contain sensitive workspace data)
 .channels_cache.json
 .users_cache.json

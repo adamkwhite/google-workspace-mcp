@@ -6,7 +6,7 @@
     "drive": true
   },
   "gmail_settings": {
-    "restricted_label": "Jobs"
+    "restricted_label": ["Jobs", "_News Feed", "AI", "_JobAgent"]
   },
   "scope_dependencies": {
     "docs": [

@@ -20,7 +20,7 @@ class GmailTools:
         self.scope_manager = scope_manager
         self.service = None
         self._label_cache: Optional[Dict[str, str]] = None
-        self._restricted_label_id: Optional[str] = None
+        self._restricted_label_ids: list = []
         self._label_initialized = False
 
     def _get_service(self):
@@ -45,8 +45,8 @@ class GmailTools:
             self._label_initialized = True
             return
 
-        restricted_label_name = self.scope_manager.get_restricted_label()
-        if not restricted_label_name:
+        restricted_label_names = self.scope_manager.get_restricted_labels()
+        if not restricted_label_names:
             self._label_initialized = True
             return
 
@@ -58,20 +58,23 @@ class GmailTools:
             # Build cache: label name -> label ID
             self._label_cache = {label["name"]: label["id"] for label in labels}
 
-            # Resolve restricted label
-            if restricted_label_name not in self._label_cache:
-                available_labels = sorted(self._label_cache.keys())
-                raise ValueError(
-                    f"Configured Gmail label '{restricted_label_name}' not found. "
-                    f"Available labels: {', '.join(available_labels)}"
-                )
+            # Resolve every configured restricted label
+            resolved_ids = []
+            for name in restricted_label_names:
+                if name not in self._label_cache:
+                    available_labels = sorted(self._label_cache.keys())
+                    raise ValueError(
+                        f"Configured Gmail label '{name}' not found. "
+                        f"Available labels: {', '.join(available_labels)}"
+                    )
+                resolved_ids.append(self._label_cache[name])
 
-            self._restricted_label_id = self._label_cache[restricted_label_name]
+            self._restricted_label_ids = resolved_ids
             self._label_initialized = True
 
             logger.info(
                 "Gmail label filtering initialized: "
-                f"'{restricted_label_name}' -> {self._restricted_label_id}"
+                f"{restricted_label_names} -> {self._restricted_label_ids}"
             )
 
         except HttpError as e:
@@ -87,10 +90,16 @@ class GmailTools:
         Returns:
             Enhanced query with label filter appended
         """
-        if not self._restricted_label_id:
+        if not self._restricted_label_ids:
             return query
 
-        label_filter = f"label:{self.scope_manager.get_restricted_label()}"
+        # Quote each label name so names with spaces (e.g. "_News Feed")
+        # aren't parsed as separate search terms. Multiple labels are OR-ed.
+        names = self.scope_manager.get_restricted_labels()
+        filters = [f'label:"{name}"' for name in names]
+        label_filter = (
+            filters[0] if len(filters) == 1 else "(" + " OR ".join(filters) + ")"
+        )
 
         if not query or not query.strip():
             return label_filter
@@ -106,13 +115,15 @@ class GmailTools:
         Raises:
             ValueError: If operation is blocked by label restriction
         """
-        if not self._restricted_label_id:
+        if not self._restricted_label_ids:
             return
 
-        restricted_label_name = self.scope_manager.get_restricted_label()
+        names = self.scope_manager.get_restricted_labels()
+        label_list = ", ".join(f"'{name}'" for name in names)
+        noun = "label" if len(names) == 1 else "labels"
         raise ValueError(
             f"Cannot {operation.replace('_', ' ')} when Gmail is restricted "
-            f"to label '{restricted_label_name}'. "
+            f"to {noun} {label_list}. "
             "Only search_emails is allowed with label filtering enabled."
         )
 
