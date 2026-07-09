@@ -55,6 +55,7 @@ Format: [Category].[Priority].[Sequence]
 - [ ] CAL.2.2 - Support recurring events
 - [ ] GMAIL.2.1 - Add attachment support
 - [ ] GMAIL.2.2 - Implement label management
+- [ ] GMAIL.2.3 - Support multi-label list in configure_scopes.py wizard (restricted_label already accepts a list; wizard only sets a single label)
 - [ ] DOCS.2.1 - Add document formatting options
 - [ ] SHEETS.2.2 - Add multiple sheet support
 - [ ] SLIDES.2.1 - Add image insertion capability
