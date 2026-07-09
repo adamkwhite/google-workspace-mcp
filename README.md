@@ -216,6 +216,10 @@ file is absent:
 ```bash
 cp config/scopes.example.json config/scopes.json
 ```
+The template ships with a sample `gmail_settings.restricted_label` list
+(note `_News Feed` — multi-word labels are matched exactly and quoted
+automatically). Replace those with your own Gmail labels, or delete the
+`gmail_settings` block to leave Gmail unrestricted.
 ```json
 {
   "enabled_services": {
