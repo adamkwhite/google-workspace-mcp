@@ -88,7 +88,7 @@ This MCP server follows the principle of least privilege by intentionally exclud
 - Gmail account
 - Google Cloud project (free)
 
-### Setup (5 minutes)
+### Setup (~15 minutes, mostly the one-time Google Cloud config)
 
 1. **Clone and setup**:
    ```bash
@@ -102,20 +102,30 @@ This MCP server follows the principle of least privilege by intentionally exclud
    python scripts/configure_scopes.py
    ```
 
-3. **Enable Google APIs** (only for services you selected):
-   - Go to [Google Cloud Console](https://console.cloud.google.com)
-   - Enable APIs for your selected services:
-     - Google Calendar API (if Calendar enabled)
-     - Gmail API (if Gmail enabled)
-     - Google Docs API (if Docs enabled)
-     - Google Drive API (if Docs enabled - required dependency)
+3. **Set up Google Cloud** (the fiddly, one-time part). Everything below happens in the [Google Cloud Console](https://console.cloud.google.com). Console labels shift occasionally, but the flow is stable:
 
-4. **Create OAuth2 credentials**:
-   - APIs & Services → Credentials → Create Credentials → OAuth client ID
-   - Choose "Desktop app"
-   - Download as `config/credentials.json`
+   **a. Create a project** — use the project picker at the top bar (or select an existing one). It's free.
 
-5. **Configure Claude Desktop**:
+   **b. Enable the APIs you'll use** — *APIs & Services → Enabled APIs & services → + Enable APIs and Services*, then enable each that matches your config:
+   - **Google Calendar API** (if Calendar enabled)
+   - **Gmail API** (if Gmail enabled)
+   - **Google Docs API** (if Docs enabled)
+   - **Google Drive API** (required whenever Docs is enabled)
+
+   **c. Configure the OAuth consent screen** — *APIs & Services → OAuth consent screen*:
+   - User type: **External**
+   - Provide an app name, your user support email, and a developer contact email. Everything else can stay blank.
+   - You do **not** need to add scopes here — the server requests them at runtime from your `scopes.json`.
+
+   **d. Add yourself as a test user** — in the consent screen's *Audience* / *Test users* section, add your own Gmail address. While the app is in **Testing** status, only listed test users can authenticate (this is the #1 cause of "Access blocked" errors).
+
+   **e. Create the OAuth client** — *APIs & Services → Credentials → + Create Credentials → OAuth client ID*:
+   - Application type: **Desktop app**
+   - Create it, then **Download JSON** and save the file as `config/credentials.json` in the repo.
+
+   > **Refresh-token note:** while the app stays in **Testing**, Google expires refresh tokens after ~7 days, so you'd re-authenticate weekly. To avoid that, set the publishing status to **In production** (*OAuth consent screen → Publish app*). For personal, single-user use you can stay in production without going through Google's verification review.
+
+4. **Configure Claude Desktop**:
    Add to your Claude Desktop config, replacing `<ABSOLUTE_PATH_TO_REPO>` with the absolute path to your clone (e.g., `/home/you/Code/google-workspace-mcp`). On Windows Claude Desktop with WSL:
    ```json
    {
@@ -133,7 +143,7 @@ This MCP server follows the principle of least privilege by intentionally exclud
    ```
    See `config/claude_desktop_config.json` for the template and `config/claude_desktop_config_alternative.json` for a bash-free alternative. On non-Windows hosts, drop the `wsl.exe` wrapper and call the venv Python directly.
 
-6. **First run** will open browser for authentication (only for enabled services)
+5. **First run** opens a browser to grant access (only for enabled services). Because the OAuth app is your own and unverified, Google shows a **"Google hasn't verified this app"** screen — click **Advanced → Go to \<app name\> (unsafe)** and continue. This is expected; it's your app. The token is then cached in `config/token.pickle` and refreshed automatically.
 
 ## 🎯 Enhanced Calendar Features
 
@@ -379,6 +389,8 @@ black src/
 ## Troubleshooting
 
 ### Authentication Issues
+- **"Access blocked: app not verified" / "app is being tested"** — your Gmail isn't listed as a test user. Add it under *OAuth consent screen → Test users*, or publish the app (see Setup step 3d).
+- **Re-prompted to log in every ~7 days** — the app is still in **Testing**; testing-mode refresh tokens expire weekly. Set publishing status to **In production** to stop this (Setup step 3).
 - Delete `config/token.pickle` and re-authenticate
 - Verify all APIs are enabled in Google Cloud Console
 - Check `config/credentials.json` exists and is valid
