@@ -22,6 +22,10 @@ config/token.json
 # Falls back to built-in defaults if absent.
 config/scopes.json
 
+# Maintainer's local token-deploy hook. Optional and machine-specific;
+# google_auth.py only runs it if present, so absence is a safe no-op.
+scripts/deploy_token.sh
+
 # Slack cache files (contain sensitive workspace data)
 .channels_cache.json
 .users_cache.json
