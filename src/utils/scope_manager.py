@@ -18,7 +18,9 @@ class ScopeManager:
     def _load_config(self) -> Dict:
         """Load scope configuration from file."""
         if not self.config_path.exists():
-            logger.warning(f"Scope config not found at {self.config_path}, using defaults")
+            logger.warning(
+                f"Scope config not found at {self.config_path}, using defaults"
+            )
             return self._get_default_config()
 
         try:
@@ -90,10 +92,14 @@ class ScopeManager:
             else:
                 logger.warning(f"No scope mapping found for service: {service}")
 
-        logger.info(f"Required scopes for enabled services {enabled_services}: {scopes}")
+        logger.info(
+            f"Required scopes for enabled services {enabled_services}: {scopes}"
+        )
         return scopes
 
-    def _validate_dependencies(self, enabled_services: Set[str], dependencies: dict) -> List[str]:
+    def _validate_dependencies(
+        self, enabled_services: Set[str], dependencies: dict
+    ) -> List[str]:
         """Validate service dependencies are met."""
         errors = []
         for service in enabled_services:
@@ -103,7 +109,9 @@ class ScopeManager:
                         dep not in self.config["enabled_services"]
                         or not self.config["enabled_services"][dep]
                     ):
-                        errors.append(f"Service '{service}' requires '{dep}' to be enabled")
+                        errors.append(
+                            f"Service '{service}' requires '{dep}' to be enabled"
+                        )
         return errors
 
     def _validate_scope_mappings(
@@ -190,7 +198,11 @@ class ScopeManager:
 
         # Validate dependencies and scope mappings
         errors.extend(self._validate_dependencies(enabled_services, dependencies))
-        errors.extend(self._validate_scope_mappings(enabled_services, dependencies, scope_mappings))
+        errors.extend(
+            self._validate_scope_mappings(
+                enabled_services, dependencies, scope_mappings
+            )
+        )
 
         # Validate Gmail settings
         errors.extend(self._validate_gmail_settings())
@@ -241,7 +253,8 @@ class ScopeManager:
             "is_valid": is_valid,
             "errors": errors,
             "service_descriptions": {
-                service: self.get_service_description(service) for service in enabled_services
+                service: self.get_service_description(service)
+                for service in enabled_services
             },
         }
 
