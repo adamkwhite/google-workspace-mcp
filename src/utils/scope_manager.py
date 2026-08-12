@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +18,7 @@ class ScopeManager:
     def _load_config(self) -> Dict:
         """Load scope configuration from file."""
         if not self.config_path.exists():
-            logger.warning(
-                f"Scope config not found at {self.config_path}, using defaults"
-            )
+            logger.warning(f"Scope config not found at {self.config_path}, using defaults")
             return self._get_default_config()
 
         try:
@@ -92,14 +90,10 @@ class ScopeManager:
             else:
                 logger.warning(f"No scope mapping found for service: {service}")
 
-        logger.info(
-            f"Required scopes for enabled services {enabled_services}: {scopes}"
-        )
+        logger.info(f"Required scopes for enabled services {enabled_services}: {scopes}")
         return scopes
 
-    def _validate_dependencies(
-        self, enabled_services: Set[str], dependencies: dict
-    ) -> List[str]:
+    def _validate_dependencies(self, enabled_services: Set[str], dependencies: dict) -> List[str]:
         """Validate service dependencies are met."""
         errors = []
         for service in enabled_services:
@@ -109,9 +103,7 @@ class ScopeManager:
                         dep not in self.config["enabled_services"]
                         or not self.config["enabled_services"][dep]
                     ):
-                        errors.append(
-                            f"Service '{service}' requires '{dep}' to be enabled"
-                        )
+                        errors.append(f"Service '{service}' requires '{dep}' to be enabled")
         return errors
 
     def _validate_scope_mappings(
@@ -130,44 +122,54 @@ class ScopeManager:
 
         return errors
 
-    def _validate_gmail_settings(self) -> List[str]:
-        """Validate Gmail settings if Gmail is enabled."""
-        errors: List[str] = []
+    @staticmethod
+    def _validate_restricted_label_list(labels: List[Any]) -> List[str]:
+        """Validate a list-valued restricted_label: every entry a non-empty string."""
+        if not labels:
+            return ["gmail_settings.restricted_label cannot be empty"]
 
+        errors: List[str] = []
+        for item in labels:
+            if not isinstance(item, str):
+                errors.append(
+                    "gmail_settings.restricted_label entries must be "
+                    f"strings, got {type(item).__name__}"
+                )
+            elif not item.strip():
+                errors.append("gmail_settings.restricted_label entries cannot be empty")
+        return errors
+
+    def _validate_gmail_settings(self) -> List[str]:
+        """Validate Gmail settings if Gmail is enabled.
+
+        `restricted_label` accepts a single string or a list of strings
+        (multiple allowed labels).
+        """
         # Only validate if Gmail is enabled
         if not self.is_service_enabled("gmail"):
-            return errors
+            return []
 
         gmail_settings = self.config.get("gmail_settings", {})
+        if not gmail_settings:
+            return []
 
-        # If gmail_settings exists, validate restricted_label.
-        # Accepts a single string or a list of strings (multiple allowed labels).
-        if gmail_settings:
-            restricted_label = gmail_settings.get("restricted_label")
+        restricted_label = gmail_settings.get("restricted_label")
 
-            if isinstance(restricted_label, str):
-                if not restricted_label.strip():
-                    errors.append("gmail_settings.restricted_label cannot be empty")
-            elif isinstance(restricted_label, list):
-                if not restricted_label:
-                    errors.append("gmail_settings.restricted_label cannot be empty")
-                for item in restricted_label:
-                    if not isinstance(item, str):
-                        errors.append(
-                            "gmail_settings.restricted_label entries must be "
-                            f"strings, got {type(item).__name__}"
-                        )
-                    elif not item.strip():
-                        errors.append(
-                            "gmail_settings.restricted_label entries cannot be empty"
-                        )
-            elif restricted_label is not None:
-                errors.append(
-                    "gmail_settings.restricted_label must be a string or list "
-                    f"of strings, got {type(restricted_label).__name__}"
-                )
+        if isinstance(restricted_label, str):
+            if not restricted_label.strip():
+                return ["gmail_settings.restricted_label cannot be empty"]
+            return []
 
-        return errors
+        if isinstance(restricted_label, list):
+            return self._validate_restricted_label_list(restricted_label)
+
+        if restricted_label is not None:
+            return [
+                "gmail_settings.restricted_label must be a string or list "
+                f"of strings, got {type(restricted_label).__name__}"
+            ]
+
+        return []
 
     def validate_configuration(self) -> Tuple[bool, List[str]]:
         """Validate the current configuration."""
@@ -188,11 +190,7 @@ class ScopeManager:
 
         # Validate dependencies and scope mappings
         errors.extend(self._validate_dependencies(enabled_services, dependencies))
-        errors.extend(
-            self._validate_scope_mappings(
-                enabled_services, dependencies, scope_mappings
-            )
-        )
+        errors.extend(self._validate_scope_mappings(enabled_services, dependencies, scope_mappings))
 
         # Validate Gmail settings
         errors.extend(self._validate_gmail_settings())
@@ -243,8 +241,7 @@ class ScopeManager:
             "is_valid": is_valid,
             "errors": errors,
             "service_descriptions": {
-                service: self.get_service_description(service)
-                for service in enabled_services
+                service: self.get_service_description(service) for service in enabled_services
             },
         }
 
