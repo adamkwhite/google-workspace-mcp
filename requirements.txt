@@ -1,7 +1,11 @@
 # Google Workspace MCP Server Requirements
 
 # MCP Framework
-mcp>=1.22.0
+# Upper bound added 2026-08-12: mcp 2.0.0 removed `Server.list_tools`, so CI
+# (which resolves the newest release) failed collecting tests/test_server.py
+# with AttributeError, while local envs pinned at 1.27.0 passed. Lift this only
+# together with a real 2.0 migration.
+mcp>=1.22.0,<2
 
 # Security: Pin starlette to patched version (CVE-2025-62727)
 # https://github.com/advisories/GHSA-7f5h-v6xp-fcq8
