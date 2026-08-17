@@ -17,6 +17,10 @@ on:
     types: [closed]
     branches: [main]
 
+concurrency:
+  group: close-the-loop
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
